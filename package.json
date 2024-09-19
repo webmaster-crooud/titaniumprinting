@@ -1,0 +1,11 @@
+{
+  "name": "titanium",
+  "version": "1.0.0",
+  "description": "Project for web Titanium Printing",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Mikael Aditya Nugroho",
+  "license": "ISC"
+}
