@@ -1,0 +1,283 @@
+{
+	"openapi": "3.0.3",
+	"info": {
+		"title": "Backend RESTful API Method",
+		"version": "1.0",
+		"description": "Designing Endpoint for Backend server API Titanium Printing",
+		"contact": { "name": "Crooud Agency", "email": "hi@crooud.com", "url": "https://crooud.com/" }
+	},
+	"servers": [
+		{ "url": "http://127.0.0.1:3001/api/v1", "description": "Local server API" },
+		{ "url": "http://stag-api.titaniumprinting.com/v1/", "description": "Staged server for API Testing" }
+	],
+	"paths": {
+		"/categories": {
+			"get": {
+				"tags": ["Categories"],
+				"summary": "List",
+				"description": "Method to return data list categories",
+				"responses": {
+					"200": {
+						"description": "Success get list categoris",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"$ref": "#/components/schemas/Category"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"204": {
+						"description": "Data is empty",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"error": {
+											"type": "boolean"
+										},
+										"message": {
+											"type": "string",
+											"example": "Categories is empty"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["Categories"],
+				"summary": "Created",
+				"description": "Method to created new Category",
+				"requestBody": {
+					"required": true,
+					"description": "Request body for created category",
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"example": "Categories Name"
+									},
+									"slug": {
+										"type": "string",
+										"example": "categories-name"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Successfully to created category",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"$ref": "#/components/schemas/Category"
+										}
+									}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Error validation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"error": {
+											"type": "boolean"
+										},
+										"message": {
+											"type": "string",
+											"example": "Category is not valid"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/categories/{categoryId}": {
+			"get": {
+				"tags": ["Categories"],
+				"summary": "Detail",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "categoryId",
+						"required": true,
+						"description": "Unique ID category",
+						"schema": {
+							"type": "integer",
+							"example": 1,
+							"minimum": 1
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Method to return data category by ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"data": {
+											"$ref": "#/components/schemas/Category"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["Categories"],
+				"summary": "Activated",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "categoryId",
+						"required": true,
+						"schema": {
+							"type": "number",
+							"example": 1
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Request body for Activated category",
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"flag": {
+										"type": "string",
+										"example": "active"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Successfully to Activated category",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string",
+											"example": "Successfully to activated category"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Categories"],
+				"summary": "Disable",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "categoryId",
+						"required": true,
+						"schema": {
+							"type": "number",
+							"example": 1
+						}
+					}
+				],
+				"requestBody": {
+					"description": "Request body for disabled category",
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"flag": {
+										"type": "string",
+										"example": "disable"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Successfully to Activated category",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": {
+											"type": "string",
+											"example": "Successfully to diasbled category"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+
+	"components": {
+		"schemas": {
+			"Category": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"example": 1
+					},
+					"name": {
+						"type": "string",
+						"example": "Categories Name"
+					},
+					"slug": {
+						"type": "string",
+						"example": "categories-name"
+					},
+					"flag": {
+						"type": "string",
+						"example": "active"
+					}
+				}
+			}
+		}
+	}
+}
