@@ -1,5 +1,5 @@
 .env
 .env.local
 node_modules
-package_lock.json
+package-lock.json
 build
