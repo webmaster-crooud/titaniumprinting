@@ -17,7 +17,7 @@ datasource db {
 model Category {
   id Int @id @default(autoincrement())
   name String @db.VarChar(100)
-  slug String @db.VarChar(120) @unique
+  slug String? @db.VarChar(120) @unique
   flag FLAG @default(ACTIVED)
   
   products Product[]
@@ -28,7 +28,7 @@ model Product {
   barcode String @id @db.VarChar(100) @default(cuid())
   categoryId Int @db.Int @map("category_id")
   name String @db.VarChar(150)
-  slug String @db.VarChar(200) @unique
+  slug String? @db.VarChar(200) @unique
   image String? @db.VarChar(255)
   description String? @db.Text
   flag FLAG @default(ACTIVED)
