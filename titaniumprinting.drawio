@@ -570,7 +570,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="KyxdZSkpp9kNLqbNnNvj-37" value="Addon" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;strokeColor=#FF6392;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fontColor=#000000;fillColor=#FFE45E;" parent="1" vertex="1">
+        <mxCell id="KyxdZSkpp9kNLqbNnNvj-37" value="Feature" style="shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;strokeColor=#FF6392;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fontColor=#000000;fillColor=#FFE45E;" parent="1" vertex="1">
           <mxGeometry x="670" y="240" width="180" height="300" as="geometry" />
         </mxCell>
         <mxCell id="KyxdZSkpp9kNLqbNnNvj-38" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;strokeColor=#FF6392;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fontColor=#000000;" parent="KyxdZSkpp9kNLqbNnNvj-37" vertex="1">
