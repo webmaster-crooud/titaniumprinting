@@ -1,6 +1,17 @@
 import express from "express";
-import { createCategoryController } from "../controllers/category.controller.js";
+import {
+	changeFlagController,
+	createCategoryController,
+	findCategoryByIdController,
+	listCategoryController,
+	updateCategoryController,
+} from "../controllers/category.controller.js";
 
 export const apiRouter = express.Router();
 
-apiRouter.post("/api/categories", createCategoryController);
+// API Categories
+apiRouter.post("/categories", createCategoryController);
+apiRouter.get("/categories", listCategoryController);
+apiRouter.get("/categories/:categoryId", findCategoryByIdController);
+apiRouter.put("/categories/:categoryId", updateCategoryController);
+apiRouter.patch("/categories/:categoryId", changeFlagController);

@@ -18,6 +18,7 @@ model Category {
   id Int @id @default(autoincrement())
   name String @db.VarChar(100)
   slug String? @db.VarChar(120) @unique
+  description String? @db.Text
   flag FLAG @default(ACTIVED)
   
   products Product[]
@@ -36,31 +37,30 @@ model Product {
   updatedAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")) @map("updated_at")
 
   category Category @relation(fields: [categoryId], references: [id])
-  product_material ProductMaterial[]
+  product_detail ProductDetail[]
 
   @@index(map: "idx_name_barcode", fields: [name, barcode])
   @@fulltext(map: "idx_name_description", fields: [name, description])
   @@map("products")
 }
 
-model ProductMaterial {
+model ProductDetail {
   barcode String
-  materialId String @db.VarChar(255) @map("material_id")
+  componentId String @db.VarChar(255) @map("component_id")
   minQty Int @db.Int @default(1) @map("min_quantity")
   totalQtyPieces Int @db.Int @map("total_quantity_pieces")
   totalPrice Decimal @db.Decimal(12,2) @default(0) @map("total_price")
   totalCogs Decimal @db.Decimal(12, 2) @default(0) @map("total_cost_of_goods_sold")
-  typeMaterial TYPEMATERIAL @default(ADDON) @map("type_material")
-  canIncrase Boolean @default(false) @map("can_incrase")
+  
 
   products Product @relation(fields: [barcode], references: [barcode])
-  material Material @relation(fields: [materialId], references: [id])
+  component Component @relation(fields: [componentId], references: [id])
 
-  @@id([barcode, materialId])
-  @@map("product_material")
+  @@id([barcode, componentId])
+  @@map("product_detail")
 }
 
-model Material {
+model Component {
   id String @id @default(uuid())
   name String @db.VarChar(100)
   image String? @db.VarChar(100)
@@ -69,23 +69,25 @@ model Material {
   price Decimal? @db.Decimal(12,2) 
   cogs Decimal? @db.Decimal(12,2) @map("cost_of_goods_sold")
   flag FLAG @default(ACTIVED)
+  typeComponent TYPECOMPONENT? @map("type_component")
+  canIncrase Boolean @default(false) @map("can_incrase")
   createdAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
   updatedAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
 
-  product_material ProductMaterial[]
+  productDetail ProductDetail[]
   qualities Quality[]
-  @@map("materials")
+  @@map("components")
 }
 
 model Quality {
   id Int @id @default(autoincrement())
-  materialId String @db.VarChar(255)
+  componentId String @db.VarChar(255)
   name String @db.VarChar(100)
   image String? @db.VarChar(100)
   orientation Boolean @default(false)
   flag FLAG @default(ACTIVED)
 
-  material Material @relation(fields: [materialId], references: [id])
+  component Component @relation(fields: [componentId], references: [id])
   sizes Size[]
   @@map("qualities")
 }
@@ -112,7 +114,10 @@ enum FLAG {
   DELETED
 }
 
-enum TYPEMATERIAL {
-  BASE
+enum TYPECOMPONENT {
+  MATERIAL
   ADDON
+  FINISHING
+  PROCESSING
+  CONSUMING
 }
