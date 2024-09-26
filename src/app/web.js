@@ -6,7 +6,7 @@ export const web = express();
 
 web.use(express.json());
 
-web.use(apiRouter);
+web.use("/api/v1", apiRouter);
 web.use("/api/health", (req, res) => {
 	res.status(200).json({
 		message: "Health server 100% running",
