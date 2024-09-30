@@ -86,32 +86,6 @@ const update = async (categoryId, request) => {
 	});
 };
 
-const changeFlag = async (categoryId) => {
-	categoryId = validate(getCategoryValidation, categoryId);
-	const category = await prisma.category.findUnique({
-		where: { id: categoryId },
-		select: { id: true, flag: true },
-	});
-	if (!category) throw new ResponseError(404, "Category is not found");
-	if (category.flag == "ACTIVED") {
-		category.flag = "DISABLED";
-	} else {
-		category.flag = "ACTIVED";
-	}
-	return await prisma.category.update({
-		where: {
-			id: categoryId,
-		},
-		data: {
-			flag: category.flag,
-		},
-		select: {
-			name: true,
-			flag: true,
-		},
-	});
-};
-
 const listActive = async (page = 1, limit = 10) => {
 	const result = await prisma.category.findMany({
 		where: {
@@ -143,6 +117,79 @@ const listActive = async (page = 1, limit = 10) => {
 	return result;
 };
 
-// !TODO Favourite, Deleted and Updating ListActive
+const isFavourite = async (categoryId) => {
+	categoryId = validate(getCategoryValidation, categoryId);
+	const category = await prisma.category.findUnique({
+		where: {
+			OR: [
+				{ id: categoryId, flag: "ACTIVED" },
+				{ id: categoryId, flag: "FAVOURITE" },
+			],
+		},
+		select: { id: true, flag: true },
+	});
+	if (!category) throw new ResponseError(404, "Category is not found");
+	if (category.flag == "ACTIVED") {
+		category.flag = "FAVOURITE";
+	} else {
+		category.flag = "ACTIVED";
+	}
+	return await prisma.category.update({
+		where: {
+			OR: [
+				{ id: categoryId, flag: "ACTIVED" },
+				{ id: categoryId, flag: "FAVOURITE" },
+			],
+		},
+		data: {
+			flag: category.flag,
+		},
+		select: {
+			name: true,
+			flag: true,
+		},
+	});
+};
 
-export default { create, findById, update, changeFlag, listActive };
+const changeFlag = async (categoryId) => {
+	categoryId = validate(getCategoryValidation, categoryId);
+	const category = await prisma.category.findUnique({
+		where: { id: categoryId },
+		select: { id: true, flag: true },
+	});
+	if (!category) throw new ResponseError(404, "Category is not found");
+	if (category.flag == "ACTIVED") {
+		category.flag = "DISABLED";
+	} else {
+		category.flag = "ACTIVED";
+	}
+	return await prisma.category.update({
+		where: {
+			id: categoryId,
+		},
+		data: {
+			flag: category.flag,
+		},
+		select: {
+			name: true,
+			flag: true,
+		},
+	});
+};
+
+const deleted = async (categoryId) => {
+	categoryId = validate(getCategoryValidation, categoryId);
+
+	const category = await prisma.category.findUnique({
+		where: { id: categoryId, flag: "DISABLED" },
+	});
+
+	if (!category) throw new ResponseError(404, "Category is not found");
+	return await prisma.category.delete({
+		where: {
+			id: category.id,
+		},
+	});
+};
+
+export default { create, findById, update, changeFlag, listActive, isFavourite, deleted };
