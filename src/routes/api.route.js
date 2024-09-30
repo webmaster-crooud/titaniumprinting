@@ -2,6 +2,8 @@ import express from "express";
 import {
 	changeFlagController,
 	createCategoryController,
+	deletedController,
+	favouriteController,
 	findCategoryByIdController,
 	listCategoryController,
 	updateCategoryController,
@@ -15,3 +17,5 @@ apiRouter.get("/categories", listCategoryController);
 apiRouter.get("/categories/:categoryId", findCategoryByIdController);
 apiRouter.put("/categories/:categoryId", updateCategoryController);
 apiRouter.patch("/categories/:categoryId", changeFlagController);
+apiRouter.patch("/categories/:categoryId", favouriteController);
+apiRouter.delete("/categories/:categoryId", deletedController);

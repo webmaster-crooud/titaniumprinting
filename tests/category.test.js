@@ -1,5 +1,9 @@
 import supertest from "supertest";
-import { cleanCategoryTable, dummyCategoriesList, removeTestCategory } from "./lib/utils.js";
+import {
+	cleanCategoryTable,
+	dummyCategoriesList,
+	removeTestCategory,
+} from "./lib/utils.js";
 import { web } from "../src/app/web.js";
 
 describe("CREATE DUMMY CATEGORIES", () => {
@@ -15,7 +19,7 @@ describe("CREATE DUMMY CATEGORIES", () => {
 });
 
 describe("POST /api/categories", () => {
-	beforeAll(async () => {
+	beforeEach(async () => {
 		await removeTestCategory();
 	});
 	afterEach(async () => {
@@ -39,11 +43,11 @@ describe("POST /api/categories", () => {
 	});
 
 	it("should can be created new category with manual input slug name", async () => {
-		const result = await supertest(web).post("/api/categories").send({
+		const result = await supertest(web).post("/api/v1/categories").send({
 			name: "Category Test Name",
 			slug: "category-test-manual-name",
 		});
-
+		console.log(result.body);
 		expect(result.status).toBe(201);
 		expect(result.body.message).toBeDefined();
 		expect(result.body.data.name).toBe("Category Test Name");
@@ -52,9 +56,11 @@ describe("POST /api/categories", () => {
 	});
 
 	it("should reject if slug category is exist", async () => {
-		let result = await supertest(web).post("/api/categories").send({
+		let result = await supertest(web).post("/api/v1/categories").send({
 			name: "Category Test Name",
 		});
+
+		console.log(result.body);
 
 		expect(result.status).toBe(201);
 		expect(result.body.message).toBeDefined();
@@ -62,7 +68,7 @@ describe("POST /api/categories", () => {
 		expect(result.body.data.slug).toBe("category-test-name");
 		expect(result.body.data.flag).toBe("ACTIVED");
 
-		result = await supertest(web).post("/api/categories").send({
+		result = await supertest(web).post("/api/v1/categories").send({
 			name: "Category Test Name",
 		});
 
