@@ -117,30 +117,46 @@ const listActive = async (page = 1, limit = 10) => {
 	return result;
 };
 
+const listDisable = async (page = 1, limit = 10) => {
+	const result = await prisma.category.findMany({
+		where: {
+			flag: "DISABLED",
+		},
+
+		select: {
+			id: true,
+			name: true,
+			slug: true,
+			flag: true,
+		},
+		skip: (page - 1) * limit,
+		take: limit,
+		orderBy: {
+			id: "desc",
+		},
+	});
+
+	if (result <= 0) {
+		throw new ResponseError(404, "Categories is empty, create new category");
+	}
+	return result;
+};
+
 const isFavourite = async (categoryId) => {
 	categoryId = validate(getCategoryValidation, categoryId);
 	const category = await prisma.category.findUnique({
-		where: {
-			OR: [
-				{ id: categoryId, flag: "ACTIVED" },
-				{ id: categoryId, flag: "FAVOURITE" },
-			],
-		},
+		where: { id: categoryId },
 		select: { id: true, flag: true },
 	});
 	if (!category) throw new ResponseError(404, "Category is not found");
+	if (category.flag === "DELETED" || category.flag === "DISABLED") throw new ResponseError(400, "Category is disabled");
 	if (category.flag == "ACTIVED") {
 		category.flag = "FAVOURITE";
 	} else {
 		category.flag = "ACTIVED";
 	}
 	return await prisma.category.update({
-		where: {
-			OR: [
-				{ id: categoryId, flag: "ACTIVED" },
-				{ id: categoryId, flag: "FAVOURITE" },
-			],
-		},
+		where: { id: categoryId },
 		data: {
 			flag: category.flag,
 		},
@@ -158,10 +174,8 @@ const changeFlag = async (categoryId) => {
 		select: { id: true, flag: true },
 	});
 	if (!category) throw new ResponseError(404, "Category is not found");
-	if (category.flag == "ACTIVED") {
+	if (category.flag == "ACTIVED" || category.flag == "FAVOURITE") {
 		category.flag = "DISABLED";
-	} else {
-		category.flag = "ACTIVED";
 	}
 	return await prisma.category.update({
 		where: {
@@ -180,16 +194,33 @@ const changeFlag = async (categoryId) => {
 const deleted = async (categoryId) => {
 	categoryId = validate(getCategoryValidation, categoryId);
 
+	// Memeriksa apakah kategori ada dan memiliki flag "DISABLED"
 	const category = await prisma.category.findUnique({
-		where: { id: categoryId, flag: "DISABLED" },
-	});
-
-	if (!category) throw new ResponseError(404, "Category is not found");
-	return await prisma.category.delete({
 		where: {
-			id: category.id,
+			id: categoryId,
+		},
+		select: {
+			id: true,
+			flag: true,
 		},
 	});
+	if (!category || category.flag !== "DISABLED") {
+		throw new ResponseError(404, "Category not found or not disabled");
+	}
+
+	const result = await prisma.category.delete({
+		where: {
+			id: categoryId,
+			flag: "DISABLED",
+		},
+		select: {
+			name: true,
+		},
+	});
+	console.log(result);
+	if (!result) throw new ResponseError(400, "Request error from input body");
+
+	return result;
 };
 
-export default { create, findById, update, changeFlag, listActive, isFavourite, deleted };
+export default { create, findById, update, changeFlag, listActive, isFavourite, deleted, listDisable };
