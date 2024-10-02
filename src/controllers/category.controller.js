@@ -69,6 +69,22 @@ export const listCategoryController = async (req, res, next) => {
 		next(error);
 	}
 };
+export const listDisableCategoryController = async (req, res, next) => {
+	try {
+		const page = req.query.page || 1;
+		const limit = 10;
+		const result = await categoryService.listDisable(page, limit);
+		res.status(200).json({
+			error: false,
+			message: "OK",
+			data: result,
+			page: page,
+			limit: limit,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
 
 export const favouriteController = async (req, res, next) => {
 	try {
@@ -86,7 +102,7 @@ export const favouriteController = async (req, res, next) => {
 export const deletedController = async (req, res, next) => {
 	try {
 		const result = await categoryService.deleted(req.params.categoryId);
-		res.status(201).json({
+		res.status(200).json({
 			error: false,
 			message: `Successfully to delete category ${result.name}`,
 		});
