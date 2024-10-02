@@ -30,3 +30,7 @@ export const dummyCategoriesList = async () => {
 		data: categories,
 	});
 };
+
+export const cleanTestProducts = async () => {
+	await prisma.product.deleteMany();
+};
