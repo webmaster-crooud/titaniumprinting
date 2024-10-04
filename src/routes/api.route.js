@@ -10,6 +10,8 @@ import {
 	updateCategoryController,
 } from "../controllers/category.controller.js";
 import productController from "../controllers/product.controller.js";
+import componentController from "../controllers/component.controller.js";
+import qualityController from "../controllers/quality.controller.js";
 
 export const apiRouter = express.Router();
 
@@ -24,7 +26,14 @@ apiRouter.patch("/categories/:categoryId/fav", favouriteController);
 apiRouter.delete("/categories/:categoryId", deletedController);
 
 // API Products
+// !TODO Update Feature Disable List, Favourite, Disabled
 apiRouter.post("/products", productController.createController);
 apiRouter.get("/products", productController.listController);
 apiRouter.get("/products/:barcode", productController.detailController);
 apiRouter.put("/products/:barcode", productController.updateController);
+
+// API Components
+apiRouter.post("/components", componentController.createController);
+
+// API Qualities
+apiRouter.post("/components/qualities/:componentId", qualityController.createController);
