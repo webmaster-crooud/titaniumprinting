@@ -34,6 +34,12 @@ apiRouter.put("/products/:barcode", productController.updateController);
 
 // API Components
 apiRouter.post("/components", componentController.createController);
+apiRouter.get("/components", componentController.listController);
+apiRouter.get("/components/disabled", componentController.listDisabledController);
+apiRouter.get("/components/:componentId", componentController.findByIdController);
+apiRouter.put("/components/:componentId", componentController.updateController);
+apiRouter.patch("/components/:componentId", componentController.disabledController);
+apiRouter.delete("/components/:componentId", componentController.deletedController);
 
 // API Qualities
 apiRouter.post("/components/qualities/:componentId", qualityController.createController);

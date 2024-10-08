@@ -1,7 +1,8 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../app/database.js";
-import { componentValidation } from "../validations/component.validation.js";
+import { componentValidation, getComponentValidation } from "../validations/component.validation.js";
 import { validate } from "../validations/validation.js";
+import { ResponseError } from "../errors/Response.error.js";
 
 const create = async (request) => {
 	const requestBody = validate(componentValidation, request);
@@ -39,4 +40,157 @@ const create = async (request) => {
 	);
 };
 
-export default { create };
+const list = async () => {
+	const countComponent = await prisma.component.count({
+		where: {
+			flag: "ACTIVED",
+		},
+	});
+
+	if (countComponent === 0) throw new ResponseError(404, "Components is empty");
+	return await prisma.component.findMany({
+		where: {
+			flag: "ACTIVED",
+		},
+		select: {
+			id: true,
+			name: true,
+			price: true,
+			cogs: true,
+			createdAt: true,
+			updatedAt: true,
+		},
+	});
+};
+
+const listDisabled = async () => {
+	const countComponent = await prisma.component.count({
+		where: {
+			flag: "DISABLED",
+		},
+	});
+
+	if (countComponent === 0) throw new ResponseError(404, "Components Disabled is empty");
+	return await prisma.component.findMany({
+		where: {
+			flag: "DISABLED",
+		},
+		select: {
+			id: true,
+			name: true,
+			price: true,
+			cogs: true,
+			createdAt: true,
+			updatedAt: true,
+		},
+	});
+};
+
+const findById = async (componentId) => {
+	componentId = validate(getComponentValidation, componentId);
+	const component = await prisma.component.findUnique({
+		where: {
+			id: componentId,
+			flag: "ACTIVED",
+		},
+		select: {
+			id: true,
+			name: true,
+			image: true,
+			flag: true,
+			price: true,
+			cogs: true,
+			typeComponent: true,
+			typePieces: true,
+			qtyPieces: true,
+			createdAt: true,
+			updatedAt: true,
+			canIncrase: true,
+		},
+	});
+
+	if (!component) throw new ResponseError(404, "Components is not found");
+	return component;
+};
+
+const update = async (componentId, request) => {
+	componentId = validate(getComponentValidation, componentId);
+	const component = await prisma.component.findUnique({
+		where: { id: componentId, flag: "ACTIVED" },
+		select: {
+			id: true,
+		},
+	});
+
+	if (!component) throw new ResponseError(404, "Component is not found");
+
+	const requestBody = validate(componentValidation, request);
+	const result = await prisma.component.update({
+		where: {
+			id: componentId,
+		},
+		data: requestBody,
+		select: {
+			id: true,
+			name: true,
+		},
+	});
+
+	return result;
+};
+
+const disabled = async (componentId) => {
+	componentId = validate(getComponentValidation, componentId);
+	const component = await prisma.component.findUnique({
+		where: {
+			id: componentId,
+		},
+		select: {
+			id: true,
+			flag: true,
+		},
+	});
+
+	if (component.flag === "ACTIVED") {
+		return await prisma.component.update({
+			where: { id: componentId, flag: "ACTIVED" },
+			data: {
+				flag: "DISABLED",
+			},
+			select: {
+				name: true,
+				flag: true,
+			},
+		});
+	} else {
+		return await prisma.component.update({
+			where: { id: componentId, flag: "DISABLED" },
+			data: {
+				flag: "ACTIVED",
+			},
+			select: {
+				name: true,
+				flag: true,
+			},
+		});
+	}
+};
+
+// !TODO Update deleted karena terdapat error ketika data tidak ditemukan
+const deleted = async (componentId) => {
+	componentId = validate(getComponentValidation, componentId);
+	const result = await prisma.component.delete({
+		where: {
+			id: componentId,
+			flag: "DISABLED",
+		},
+		select: {
+			name: true,
+		},
+	});
+
+	if (!result) throw new ResponseError(400, "Components is not require to deleted");
+	return result;
+};
+
+export default { create, list, findById, update, disabled, deleted, listDisabled };
