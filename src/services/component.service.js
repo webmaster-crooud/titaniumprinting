@@ -176,21 +176,28 @@ const disabled = async (componentId) => {
 	}
 };
 
-// !TODO Update deleted karena terdapat error ketika data tidak ditemukan
 const deleted = async (componentId) => {
 	componentId = validate(getComponentValidation, componentId);
-	const result = await prisma.component.delete({
+	const component = await prisma.component.findUnique({
 		where: {
 			id: componentId,
+			flag: "DISABLED",
+		},
+		select: {
+			id: true,
+		},
+	});
+	if (!component) throw new ResponseError(400, "Components is not require to deleted");
+
+	return await prisma.component.delete({
+		where: {
+			id: component.id,
 			flag: "DISABLED",
 		},
 		select: {
 			name: true,
 		},
 	});
-
-	if (!result) throw new ResponseError(400, "Components is not require to deleted");
-	return result;
 };
 
 export default { create, list, findById, update, disabled, deleted, listDisabled };
