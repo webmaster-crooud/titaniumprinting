@@ -189,14 +189,39 @@ const deleted = async (componentId) => {
 	});
 	if (!component) throw new ResponseError(400, "Components is not require to deleted");
 
-	return await prisma.component.delete({
-		where: {
-			id: component.id,
-			flag: "DISABLED",
-		},
-		select: {
-			name: true,
-		},
+	return await prisma.$transaction(async (tx) => {
+		const quality = await tx.quality.findMany({
+			where: {
+				componentId: componentId,
+			},
+		});
+
+		// Deleted sizes with quality ID
+		await Promise.all(
+			quality.map(async (data) => {
+				const sizes = await tx.size.deleteMany({
+					where: { qualityId: data.id },
+				});
+				return sizes;
+			})
+		);
+
+		// Deleted Quality with Compoenet id
+		await tx.quality.deleteMany({
+			where: {
+				componentId: component.id,
+			},
+		});
+
+		// Deleted Component
+		await tx.component.delete({
+			where: {
+				id: component.id,
+			},
+			select: {
+				id: true,
+			},
+		});
 	});
 };
 

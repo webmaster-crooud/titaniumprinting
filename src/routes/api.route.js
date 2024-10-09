@@ -43,3 +43,9 @@ apiRouter.delete("/components/:componentId", componentController.deletedControll
 
 // API Qualities
 apiRouter.post("/components/qualities/:componentId", qualityController.createController);
+apiRouter.put("/components/qualities/:componentId/:qualityId", qualityController.updateController);
+apiRouter.delete("/components/qualities/:componentId/:qualityId", qualityController.deletedController);
+
+// API Size
+apiRouter.put("/components/sizes/:qualityId/:sizeId", qualityController.updateSizeController);
+apiRouter.delete("/components/sizes/:qualityId/:sizeId", qualityController.deletedSizeController);

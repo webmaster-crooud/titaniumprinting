@@ -82,11 +82,10 @@ const disabledController = async (req, res, next) => {
 
 const deletedController = async (req, res, next) => {
 	try {
-		const result = await componentService.deleted(req.params.componentId);
+		await componentService.deleted(req.params.componentId);
 		res.status(201).json({
 			error: false,
 			message: "Successfully to deleted component",
-			data: result,
 		});
 	} catch (error) {
 		next(error);

@@ -14,3 +14,12 @@ export const qualitySizeValidation = Joi.array().items({
 	orientation: Joi.boolean().valid(true, false),
 	sizes: Joi.array().items(sizeValidation),
 });
+
+export const qualityValidation = Joi.object({
+	name: Joi.string().max(100).required(),
+	image: Joi.string().max(100).optional().allow(""),
+	orientation: Joi.boolean().valid(true, false),
+});
+
+export const getQualityValidation = Joi.number().required();
+export const getSizeValidation = Joi.number().required();
