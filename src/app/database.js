@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { errLogger, logger } from "./logger.js";
 
 export const prisma = new PrismaClient({
@@ -20,6 +20,11 @@ export const prisma = new PrismaClient({
 			level: "warn",
 		},
 	],
+	transactionOptions: {
+		isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+		maxWait: 5000, // default: 2000
+		timeout: 10000, // default: 5000
+	},
 });
 
 prisma.$on("query", (e) => {

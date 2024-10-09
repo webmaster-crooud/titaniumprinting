@@ -174,7 +174,9 @@ const changeFlag = async (categoryId) => {
 		select: { id: true, flag: true },
 	});
 	if (!category) throw new ResponseError(404, "Category is not found");
-	if (category.flag == "ACTIVED" || category.flag == "FAVOURITE") {
+	if (category.flag == "DISABLED") {
+		category.flag = "ACTIVED";
+	} else {
 		category.flag = "DISABLED";
 	}
 	return await prisma.category.update({

@@ -9,6 +9,9 @@ import {
 	listDisableCategoryController,
 	updateCategoryController,
 } from "../controllers/category.controller.js";
+import productController from "../controllers/product.controller.js";
+import componentController from "../controllers/component.controller.js";
+import qualityController from "../controllers/quality.controller.js";
 
 export const apiRouter = express.Router();
 
@@ -21,3 +24,28 @@ apiRouter.put("/categories/:categoryId", updateCategoryController);
 apiRouter.patch("/categories/:categoryId", changeFlagController);
 apiRouter.patch("/categories/:categoryId/fav", favouriteController);
 apiRouter.delete("/categories/:categoryId", deletedController);
+
+// API Products
+// !TODO Update Feature Disable List, Favourite, Disabled
+apiRouter.post("/products", productController.createController);
+apiRouter.get("/products", productController.listController);
+apiRouter.get("/products/:barcode", productController.detailController);
+apiRouter.put("/products/:barcode", productController.updateController);
+
+// API Components
+apiRouter.post("/components", componentController.createController);
+apiRouter.get("/components", componentController.listController);
+apiRouter.get("/components/disabled", componentController.listDisabledController);
+apiRouter.get("/components/:componentId", componentController.findByIdController);
+apiRouter.put("/components/:componentId", componentController.updateController);
+apiRouter.patch("/components/:componentId", componentController.disabledController);
+apiRouter.delete("/components/:componentId", componentController.deletedController);
+
+// API Qualities
+apiRouter.post("/components/qualities/:componentId", qualityController.createController);
+apiRouter.put("/components/qualities/:componentId/:qualityId", qualityController.updateController);
+apiRouter.delete("/components/qualities/:componentId/:qualityId", qualityController.deletedController);
+
+// API Size
+apiRouter.put("/components/sizes/:qualityId/:sizeId", qualityController.updateSizeController);
+apiRouter.delete("/components/sizes/:qualityId/:sizeId", qualityController.deletedSizeController);
