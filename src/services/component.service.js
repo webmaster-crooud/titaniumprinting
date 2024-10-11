@@ -60,6 +60,9 @@ const list = async () => {
 			createdAt: true,
 			updatedAt: true,
 		},
+		orderBy: {
+			createdAt: "desc",
+		},
 	});
 };
 
@@ -106,6 +109,11 @@ const findById = async (componentId) => {
 			createdAt: true,
 			updatedAt: true,
 			canIncrase: true,
+			qualities: {
+				include: {
+					sizes: true,
+				},
+			},
 		},
 	});
 
@@ -151,9 +159,11 @@ const disabled = async (componentId) => {
 		},
 	});
 
+	if (!component) throw new ResponseError(404, "Components is not exits");
+
 	if (component.flag === "ACTIVED") {
 		return await prisma.component.update({
-			where: { id: componentId, flag: "ACTIVED" },
+			where: { id: componentId },
 			data: {
 				flag: "DISABLED",
 			},
@@ -164,7 +174,7 @@ const disabled = async (componentId) => {
 		});
 	} else {
 		return await prisma.component.update({
-			where: { id: componentId, flag: "DISABLED" },
+			where: { id: componentId },
 			data: {
 				flag: "ACTIVED",
 			},

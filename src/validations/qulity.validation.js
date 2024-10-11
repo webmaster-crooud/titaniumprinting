@@ -8,7 +8,7 @@ export const sizeValidation = Joi.object({
 	image: Joi.string().max(100).optional().allow(""),
 });
 
-export const qualitySizeValidation = Joi.array().items({
+export const qualitySizeValidation = Joi.object({
 	name: Joi.string().max(100).required(),
 	image: Joi.string().max(100).optional().allow(""),
 	orientation: Joi.boolean().valid(true, false),
