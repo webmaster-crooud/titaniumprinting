@@ -20,7 +20,7 @@ const checkExistingQuality = async (componentId, name) => {
 };
 
 const createQuality = async (qualityData) => {
-	return Promise.all(qualityData.map((data) => prisma.quality.create({ data })));
+	return prisma.quality.create({ data: qualityData });
 };
 
 const createSizes = async (requestBody, createdQualities) => {
@@ -38,22 +38,19 @@ const createSizes = async (requestBody, createdQualities) => {
 };
 
 const create = async (componentId, request) => {
-	const requestBody = validate(qualitySizeValidation, request);
-	const qualityData = requestBody.map(({ name, image, orientation }) => ({
-		componentId,
-		name,
-		image,
-		orientation,
-	}));
+	const { name, image, orientation, sizes } = validate(qualitySizeValidation, request);
 
-	for (const { name } of requestBody) {
-		await checkExistingQuality(componentId, name);
-	}
+	await checkExistingQuality(componentId, name);
 
 	const result = await prisma.$transaction(async (prisma) => {
-		const createdQualities = await createQuality(qualityData);
-		await createSizes(requestBody, createdQualities);
-		return createdQualities;
+		const createdQuality = await createQuality({
+			componentId,
+			name,
+			image,
+			orientation,
+		});
+		await createSizes(sizes, createdQuality.id);
+		return createdQuality;
 	});
 
 	return result;
