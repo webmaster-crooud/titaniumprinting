@@ -23,15 +23,17 @@ const createQuality = async (qualityData) => {
 	return prisma.quality.create({ data: qualityData });
 };
 
-const createSizes = async (sizes, qualityId) => {
-	const sizesData = sizes.map((size) => ({
-		qualityId,
-		width: size.width,
-		height: size.height,
-		weight: size.weight,
-		price: size.price,
-		cogs: size.cogs,
-	}));
+const createSizes = async (requestBody, createdQualities) => {
+	const sizesData = requestBody.flatMap(({ sizes }, index) =>
+		sizes.map((size) => ({
+			qualityId: createdQualities[index].id,
+			width: size.width,
+			height: size.height,
+			weight: size.weight,
+			price: size.price,
+			cogs: size.cogs,
+		}))
+	);
 	await prisma.size.createMany({ data: sizesData });
 };
 

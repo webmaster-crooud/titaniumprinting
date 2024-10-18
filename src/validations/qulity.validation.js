@@ -12,7 +12,7 @@ export const qualitySizeValidation = Joi.object({
 	name: Joi.string().max(100).required(),
 	image: Joi.string().max(100).optional().allow(""),
 	orientation: Joi.boolean().valid(true, false),
-	sizes: Joi.array().items(sizeValidation),
+	sizes: Joi.array().items(sizeValidation).optional(),
 });
 
 export const qualityValidation = Joi.object({

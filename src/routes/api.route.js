@@ -29,6 +29,7 @@ apiRouter.delete("/categories/:categoryId", deletedController);
 // !TODO Update Feature Disable List, Favourite, Disabled
 apiRouter.post("/products", productController.createController);
 apiRouter.get("/products", productController.listController);
+apiRouter.get("/products/components", productController.listComponentsController);
 apiRouter.get("/products/:barcode", productController.detailController);
 apiRouter.put("/products/:barcode", productController.updateController);
 

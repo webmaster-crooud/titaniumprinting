@@ -110,8 +110,21 @@ const findById = async (componentId) => {
 			updatedAt: true,
 			canIncrase: true,
 			qualities: {
-				include: {
-					sizes: true,
+				select: {
+					id: true,
+					name: true,
+					flag: true,
+					orientation: true,
+					sizes: {
+						select: {
+							id: true,
+							width: true,
+							height: true,
+							weight: true,
+							price: true,
+							cogs: true,
+						},
+					},
 				},
 			},
 		},
