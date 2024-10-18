@@ -60,9 +60,23 @@ const updateController = async (req, res, next) => {
 	}
 };
 
+const listComponentsController = async (req, res, next) => {
+	try {
+		const result = await productService.listComponents();
+		res.status(201).json({
+			error: false,
+			message: "Successfully to get data list components",
+			data: result,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 export default {
 	createController,
 	detailController,
 	listController,
+	listComponentsController,
 	updateController,
 };

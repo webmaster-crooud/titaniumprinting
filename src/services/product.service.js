@@ -119,6 +119,48 @@ const list = async (page = 1, limit = 10) => {
 	return result;
 };
 
+const listComponents = async () => {
+	return await prisma.component.findMany({
+		where: {
+			flag: "ACTIVED",
+		},
+		select: {
+			id: true,
+			name: true,
+			price: true,
+			typeComponent: true,
+			typePieces: true,
+			qualities: {
+				where: {
+					sizes: {
+						some: {
+							price: {
+								not: null, // Memastikan harga tidak null
+							},
+						},
+					},
+				},
+				select: {
+					sizes: {
+						where: {
+							NOT: {
+								OR: [{ price: null }, { price: 0 }],
+							},
+						},
+						select: {
+							price: true,
+						},
+						orderBy: {
+							price: "asc",
+						},
+						take: 1, // Mengambil ukuran dengan harga terendah
+					},
+				},
+			},
+		},
+	});
+};
+
 const update = async (barcode, request) => {
 	request = validate(productValidation, request);
 
@@ -172,4 +214,5 @@ export default {
 	findByBarcode,
 	list,
 	update,
+	listComponents,
 };

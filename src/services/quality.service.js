@@ -30,6 +30,8 @@ const createSizes = async (requestBody, createdQualities) => {
 			width: size.width,
 			height: size.height,
 			weight: size.weight,
+			price: size.price,
+			cogs: size.cogs,
 		}))
 	);
 	await prisma.size.createMany({ data: sizesData });
