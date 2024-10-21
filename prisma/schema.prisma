@@ -83,7 +83,7 @@ model Service {
   barcode String @id @default(cuid())
   name String @db.VarChar(100)
   slug String @db.VarChar(100)
-  flag String @db.VarChar(100)
+  flag FLAG @default(ACTIVED)
 
   service_product ServiceProduct[]
   category_service CategoryService[]
@@ -153,7 +153,6 @@ enum FLAG {
   ACTIVED
   FAVOURITE
   DISABLED
-  DELETED
 }
 
 enum TYPECOMPONENT {
