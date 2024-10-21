@@ -12,6 +12,7 @@ import {
 import productController from "../controllers/product.controller.js";
 import componentController from "../controllers/component.controller.js";
 import qualityController from "../controllers/quality.controller.js";
+import serviceController from "../controllers/service.controller.js";
 
 export const apiRouter = express.Router();
 
@@ -29,24 +30,67 @@ apiRouter.delete("/categories/:categoryId", deletedController);
 // !TODO Update Feature Disable List, Favourite, Disabled
 apiRouter.post("/products", productController.createController);
 apiRouter.get("/products", productController.listController);
-apiRouter.get("/products/components", productController.listComponentsController);
+apiRouter.get(
+	"/products/components",
+	productController.listComponentsController
+);
 apiRouter.get("/products/:barcode", productController.detailController);
 apiRouter.put("/products/:barcode", productController.updateController);
 
 // API Components
 apiRouter.post("/components", componentController.createController);
 apiRouter.get("/components", componentController.listController);
-apiRouter.get("/components/disabled", componentController.listDisabledController);
-apiRouter.get("/components/:componentId", componentController.findByIdController);
+apiRouter.get(
+	"/components/disabled",
+	componentController.listDisabledController
+);
+apiRouter.get(
+	"/components/:componentId",
+	componentController.findByIdController
+);
 apiRouter.put("/components/:componentId", componentController.updateController);
-apiRouter.patch("/components/:componentId", componentController.disabledController);
-apiRouter.delete("/components/:componentId", componentController.deletedController);
+apiRouter.patch(
+	"/components/:componentId",
+	componentController.disabledController
+);
+apiRouter.delete(
+	"/components/:componentId",
+	componentController.deletedController
+);
 
 // API Qualities
-apiRouter.post("/components/qualities/:componentId", qualityController.createController);
-apiRouter.put("/components/qualities/:componentId/:qualityId", qualityController.updateController);
-apiRouter.delete("/components/qualities/:componentId/:qualityId", qualityController.deletedController);
+apiRouter.post(
+	"/components/qualities/:componentId",
+	qualityController.createController
+);
+apiRouter.put(
+	"/components/qualities/:componentId/:qualityId",
+	qualityController.updateController
+);
+apiRouter.delete(
+	"/components/qualities/:componentId/:qualityId",
+	qualityController.deletedController
+);
 
-// API Size
-apiRouter.put("/components/sizes/:qualityId/:sizeId", qualityController.updateSizeController);
-apiRouter.delete("/components/sizes/:qualityId/:sizeId", qualityController.deletedSizeController);
+// API Sizes
+apiRouter.put(
+	"/components/sizes/:qualityId/:sizeId",
+	qualityController.updateSizeController
+);
+apiRouter.delete(
+	"/components/sizes/:qualityId/:sizeId",
+	qualityController.deletedSizeController
+);
+
+// API Services
+apiRouter.get("/services", serviceController.listController);
+apiRouter.get("/services/disabled", serviceController.listDisabledController);
+apiRouter.post("/services", serviceController.createController);
+apiRouter.get("/services/:barcode", serviceController.detailController);
+apiRouter.put("/services/:barcode", serviceController.updateController);
+apiRouter.delete("/services/:barcode", serviceController.deletedController);
+apiRouter.patch("/services/:barcode", serviceController.changeFlagController);
+apiRouter.patch(
+	"/services/:barcode/favourite",
+	serviceController.favouriteController
+);
