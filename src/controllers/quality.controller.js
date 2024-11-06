@@ -2,7 +2,7 @@ import qualityService from "../services/quality.service.js";
 
 const createController = async (req, res, next) => {
 	try {
-		const data = await qualityService.create(req.params.componentId, req.body);
+		const data = await qualityService.create(req.body, req.params.componentId);
 		res.status(201).json({
 			error: false,
 			message: "OK",
@@ -68,4 +68,10 @@ const deletedSizeController = async (req, res, next) => {
 	}
 };
 
-export default { createController, updateController, deletedController, updateSizeController, deletedSizeController };
+export default {
+	createController,
+	updateController,
+	deletedController,
+	updateSizeController,
+	deletedSizeController,
+};

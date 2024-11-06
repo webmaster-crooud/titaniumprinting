@@ -2,9 +2,10 @@ import serviceService from "../services/service.service.js";
 const createController = async (req, res, next) => {
 	try {
 		const result = await serviceService.create(req.body);
+
 		res.status(201).json({
 			error: false,
-			message: `Successfully to create ${result.name}`,
+			message: `Successfully to create ${result.service.name}`,
 		});
 	} catch (error) {
 		next(error);
@@ -31,7 +32,7 @@ const updateController = async (req, res, next) => {
 		const result = await serviceService.update(barcode, request);
 		res.status(201).json({
 			error: false,
-			message: `Successfully to updated ${result.name} service's`,
+			message: `Successfully to updated ${result.service.name} service's`,
 		});
 	} catch (error) {
 		next(error);
@@ -100,6 +101,19 @@ const favouriteController = async (req, res, next) => {
 	}
 };
 
+const deleteCategoriesServiceController = async (req, res, next) => {
+	try {
+		const params = req.params;
+		await serviceService.deleteCategoriesService(params);
+		res.status(201).json({
+			error: false,
+			message: "Successfully to deleted catagory from this service",
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 export default {
 	createController,
 	detailController,
@@ -109,4 +123,5 @@ export default {
 	deletedController,
 	changeFlagController,
 	favouriteController,
+	deleteCategoriesServiceController,
 };

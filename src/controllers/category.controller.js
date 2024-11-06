@@ -101,10 +101,10 @@ export const favouriteController = async (req, res, next) => {
 
 export const deletedController = async (req, res, next) => {
 	try {
-		const result = await categoryService.deleted(req.params.categoryId);
+		await categoryService.deleted(req.params.categoryId);
 		res.status(200).json({
 			error: false,
-			message: `Successfully to delete category ${result.name}`,
+			message: `Successfully to delete category`,
 		});
 	} catch (error) {
 		next(error);

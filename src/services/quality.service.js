@@ -10,49 +10,68 @@ import {
 } from "../validations/qulity.validation.js";
 import { validate } from "../validations/validation.js";
 
-const checkExistingQuality = async (componentId, name) => {
-	const existingQuality = await prisma.quality.findFirst({
-		where: { componentId, name },
+const create = async (request, componentId) => {
+	const qualities = validate(qualitySizeValidation, request);
+	componentId = validate(getComponentValidation, componentId);
+
+	const countQualities = await prisma.quality.count({
+		where: {
+			componentId: componentId,
+			name: qualities.name,
+		},
 	});
-	if (existingQuality) {
-		throw new ResponseError(400, `Quality with name "${name}" for this component already exists.`);
-	}
-};
 
-const createQuality = async (qualityData) => {
-	return prisma.quality.create({ data: qualityData });
-};
+	if (countQualities >= 1)
+		throw new ResponseError(
+			400,
+			`Quality with this ${request.name} is already exists.`
+		);
 
-const createSizes = async (requestBody, createdQualities) => {
-	const sizesData = requestBody.flatMap(({ sizes }, index) =>
-		sizes.map((size) => ({
-			qualityId: createdQualities[index].id,
-			width: size.width,
-			height: size.height,
-			weight: size.weight,
-			price: size.price,
-			cogs: size.cogs,
-		}))
-	);
-	await prisma.size.createMany({ data: sizesData });
-};
-
-const create = async (componentId, request) => {
-	const { name, image, orientation, sizes } = validate(qualitySizeValidation, request);
-
-	await checkExistingQuality(componentId, name);
-
-	const result = await prisma.$transaction(async (prisma) => {
-		const createdQuality = await createQuality({
-			componentId,
-			name,
-			image,
-			orientation,
+	const result = await prisma.$transaction(async (tx) => {
+		return await tx.quality.create({
+			data: {
+				componentId: componentId,
+				name: request.name,
+				orientation: request.orientation,
+				description: request.description,
+				sizes: {
+					createMany: {
+						data: (request.sizes || []).map((size) => ({
+							qualityId: qualities.id,
+							...size,
+						})),
+						skipDuplicates: true,
+					},
+				},
+			},
+			select: {
+				id: true,
+				componentId: true,
+				orientation: true,
+				component: {
+					select: {
+						id: true,
+						name: true,
+						canIncrise: true,
+					},
+				},
+				sizes: {
+					select: {
+						qualityId: true,
+						id: true,
+						width: true,
+						height: true,
+						weight: true,
+						price: true,
+						cogs: true,
+						length: true,
+					},
+				},
+			},
 		});
-		await createSizes(sizes, createdQuality.id);
-		return createdQuality;
 	});
 
+	if (!result) throw new ResponseError(400, "Opsss... something wrong!");
 	return result;
 };
 
@@ -152,7 +171,8 @@ const updateSize = async (reqParams, requestBody) => {
 			qualityId: true,
 		},
 	});
-	if (!size) throw new ResponseError(404, `Size is not found in ${size.quality.name}`);
+	if (!size)
+		throw new ResponseError(404, `Size is not found in ${size.quality.name}`);
 
 	requestBody = validate(sizeValidation, requestBody);
 	return await prisma.size.update({
@@ -187,7 +207,8 @@ const deleteSize = async (reqParams) => {
 		},
 	});
 
-	if (!size) throw new ResponseError(404, `Size is not found in ${size.quality.name}`);
+	if (!size)
+		throw new ResponseError(404, `Size is not found in ${size.quality.name}`);
 
 	return await prisma.size.delete({
 		where: {
@@ -199,4 +220,10 @@ const deleteSize = async (reqParams) => {
 		},
 	});
 };
-export default { create, updateQuality, deletedQuality, updateSize, deleteSize };
+export default {
+	create,
+	updateQuality,
+	deletedQuality,
+	updateSize,
+	deleteSize,
+};
