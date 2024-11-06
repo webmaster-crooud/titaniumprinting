@@ -1,4 +1,7 @@
-import { categoryValidation, getCategoryValidation } from "../validations/category.valdation.js";
+import {
+	categoryValidation,
+	getCategoryValidation,
+} from "../validations/category.valdation.js";
 import { validate } from "../validations/validation.js";
 import { prisma } from "../app/database.js";
 import { ResponseError } from "../errors/Response.error.js";
@@ -149,7 +152,8 @@ const isFavourite = async (categoryId) => {
 		select: { id: true, flag: true },
 	});
 	if (!category) throw new ResponseError(404, "Category is not found");
-	if (category.flag === "DELETED" || category.flag === "DISABLED") throw new ResponseError(400, "Category is disabled");
+	if (category.flag === "DELETED" || category.flag === "DISABLED")
+		throw new ResponseError(400, "Category is disabled");
 	if (category.flag == "ACTIVED") {
 		category.flag = "FAVOURITE";
 	} else {
@@ -196,33 +200,55 @@ const changeFlag = async (categoryId) => {
 const deleted = async (categoryId) => {
 	categoryId = validate(getCategoryValidation, categoryId);
 
-	// Memeriksa apakah kategori ada dan memiliki flag "DISABLED"
 	const category = await prisma.category.findUnique({
 		where: {
 			id: categoryId,
 		},
 		select: {
 			id: true,
-			flag: true,
 		},
 	});
-	if (!category || category.flag !== "DISABLED") {
-		throw new ResponseError(404, "Category not found or not disabled");
+	if (!category) {
+		throw new ResponseError(404, "Category not found");
 	}
 
-	const result = await prisma.category.delete({
-		where: {
-			id: categoryId,
-			flag: "DISABLED",
-		},
-		select: {
-			name: true,
-		},
+	const result = await prisma.$transaction(async (tx) => {
+		const deletedCategoryService = await tx.categoryService.deleteMany({
+			where: {
+				categoryId: category.id,
+			},
+		});
+
+		const deletedCategoryProduct = await tx.categoryProduct.deleteMany({
+			where: {
+				categoryId: category.id,
+			},
+		});
+
+		const deletedCategory = await tx.category.delete({
+			where: {
+				id: category.id,
+			},
+			select: {
+				name: true,
+			},
+		});
+
+		return { deletedCategoryService, deletedCategoryProduct, deletedCategory };
 	});
-	console.log(result);
-	if (!result) throw new ResponseError(400, "Request error from input body");
+
+	if (!result) throw new ResponseError(400, "Error deleted category");
 
 	return result;
 };
 
-export default { create, findById, update, changeFlag, listActive, isFavourite, deleted, listDisable };
+export default {
+	create,
+	findById,
+	update,
+	changeFlag,
+	listActive,
+	isFavourite,
+	deleted,
+	listDisable,
+};

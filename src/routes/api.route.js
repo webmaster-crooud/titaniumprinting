@@ -13,6 +13,7 @@ import productController from "../controllers/product.controller.js";
 import componentController from "../controllers/component.controller.js";
 import qualityController from "../controllers/quality.controller.js";
 import serviceController from "../controllers/service.controller.js";
+import upload from "../middlewares/multer.middleware.js";
 
 export const apiRouter = express.Router();
 
@@ -28,11 +29,24 @@ apiRouter.delete("/categories/:categoryId", deletedController);
 
 // API Products
 // !TODO Update Feature Disable List, Favourite, Disabled
-apiRouter.post("/products", productController.createController);
+apiRouter.post(
+	"/products",
+	upload.array("images"),
+	productController.createController
+);
 apiRouter.get("/products", productController.listController);
+apiRouter.get("/products/disabled", productController.listDisabledController);
 apiRouter.get(
 	"/products/components",
-	productController.listComponentsController
+	productController.listComponentsProductsController
+);
+apiRouter.get(
+	"/products/categories",
+	productController.listCategoriesProductsController
+);
+apiRouter.get(
+	"/products/services",
+	productController.listServiceProductsController
 );
 apiRouter.get("/products/:barcode", productController.detailController);
 apiRouter.put("/products/:barcode", productController.updateController);
@@ -89,6 +103,10 @@ apiRouter.post("/services", serviceController.createController);
 apiRouter.get("/services/:barcode", serviceController.detailController);
 apiRouter.put("/services/:barcode", serviceController.updateController);
 apiRouter.delete("/services/:barcode", serviceController.deletedController);
+apiRouter.delete(
+	"/services/:barcode/:categoryId",
+	serviceController.deleteCategoriesServiceController
+);
 apiRouter.patch("/services/:barcode", serviceController.changeFlagController);
 apiRouter.patch(
 	"/services/:barcode/favourite",

@@ -10,26 +10,39 @@ import slug from "slug";
 const create = async (request) => {
 	request = validate(serviceValidation, request);
 
-	let slugable = request.slug;
-	if (slugable === undefined) {
-		slugable = slug(request.name);
-	}
 	const countService = await prisma.service.count({
 		where: {
-			slug: slugable,
+			slug: slug(request.name),
 		},
 	});
 
 	if (countService) throw new ResponseError(400, `${request.name} is exist`);
 
-	request.slug = slugable;
-	console.log(request);
-	return await prisma.service.create({
-		data: request,
-		select: {
-			name: true,
-		},
+	const result = await prisma.$transaction(async (tx) => {
+		const service = await prisma.service.create({
+			data: {
+				name: request.name,
+				slug: slug(request.name),
+			},
+			select: {
+				barcode: true,
+				name: true,
+			},
+		});
+
+		const categoryService = await prisma.categoryService.createMany({
+			data: (request.categoryService || []).map((category) => ({
+				barcode: service.barcode,
+				categoryId: category.categoryId,
+			})),
+			skipDuplicates: true,
+		});
+
+		return { service, categoryService };
 	});
+
+	if (!result) throw new ResponseError(400, "Opss... something wrong!");
+	return result;
 };
 
 const detail = async (barcode) => {
@@ -38,7 +51,6 @@ const detail = async (barcode) => {
 	const result = await prisma.service.findUnique({
 		where: {
 			barcode: barcode,
-			flag: "ACTIVED",
 		},
 		select: {
 			barcode: true,
@@ -47,7 +59,8 @@ const detail = async (barcode) => {
 				select: {
 					categories: {
 						select: {
-							name,
+							id: true,
+							name: true,
 						},
 					},
 				},
@@ -88,6 +101,8 @@ const update = async (barcode, request) => {
 		},
 		select: {
 			barcode: true,
+			name: true,
+			slug: true,
 		},
 	});
 
@@ -100,24 +115,37 @@ const update = async (barcode, request) => {
 		},
 	});
 
-	if (countService === 1)
-		throw new ResponseError(400, `${request.name} is exixts`);
+	if (service.slug !== slug(request.name)) {
+		if (countService === 1)
+			throw new ResponseError(400, `${request.name} is exixts`);
+	}
 
-	const result = await prisma.service.update({
-		where: {
-			barcode: service.barcode,
-		},
-		data: {
-			name: request.name,
-		},
-		select: {
-			name: true,
-		},
+	const result = await prisma.$transaction(async (tx) => {
+		const service = await prisma.service.update({
+			data: {
+				name: request.name,
+			},
+			where: {
+				barcode: barcode,
+			},
+			select: {
+				barcode: true,
+				name: true,
+			},
+		});
+
+		const categoryService = await prisma.categoryService.createMany({
+			data: (request.categoryService || []).map((category) => ({
+				barcode: service.barcode,
+				categoryId: category.categoryId,
+			})),
+			skipDuplicates: true,
+		});
+
+		return { service, categoryService };
 	});
 
-	if (!result)
-		throw new ResponseError(400, "Opss... something happen on updating data");
-
+	if (!result) throw new ResponseError(400, "Opss... something wrong!");
 	return result;
 };
 
@@ -177,11 +205,29 @@ const deleted = async (barcode) => {
 			404,
 			"Service's is not found or not required to remove"
 		);
-	return await prisma.service.delete({
-		where: {
-			barcode: barcode,
-			flag: "DISABLED",
-		},
+	return await prisma.$transaction(async (tx) => {
+		const category = await tx.categoryService.deleteMany({
+			where: {
+				barcode: barcode,
+			},
+		});
+
+		const product = await tx.serviceProduct.deleteMany({
+			where: {
+				barcodeService: barcode,
+			},
+		});
+		const service = await tx.service.delete({
+			where: {
+				barcode: barcode,
+				flag: "DISABLED",
+			},
+			select: {
+				barcode: true,
+			},
+		});
+
+		return { service, category, product };
 	});
 };
 
@@ -221,23 +267,59 @@ const favourite = async (barcode) => {
 		},
 		select: {
 			barcode: true,
+			flag: true,
 		},
 	});
 
 	if (!service) throw new ResponseError("404", "Service is not found");
-	return await prisma.service.update({
+	if (service.flag === "ACTIVED") {
+		return await prisma.service.update({
+			where: {
+				barcode: service.barcode,
+			},
+			data: {
+				flag: "FAVOURITE",
+			},
+			select: {
+				name: true,
+				flag: true,
+			},
+		});
+	} else {
+		return await prisma.service.update({
+			where: {
+				barcode: service.barcode,
+			},
+			data: {
+				flag: "ACTIVED",
+			},
+			select: {
+				name: true,
+				flag: true,
+			},
+		});
+	}
+};
+
+const deleteCategoriesService = async (params) => {
+	if (!params.barcode && !params.categoryId) {
+		throw new ResponseError(400, "Request is not valid");
+	}
+
+	const barcode = params.barcode;
+	const categoryId = parseInt(params.categoryId);
+	console.log(barcode, categoryId);
+
+	const result = await prisma.categoryService.deleteMany({
 		where: {
-			barcode: service.barcode,
-		},
-		data: {
-			flag: "FAVOURITE",
-		},
-		select: {
-			name: true,
-			flag: true,
+			categoryId: categoryId,
+			barcode: barcode,
 		},
 	});
+	if (!result) throw new ResponseError(400, "Opsss... something wrong!");
+	return result;
 };
+
 export default {
 	create,
 	detail,
@@ -247,4 +329,5 @@ export default {
 	deleted,
 	favourite,
 	changeFlag,
+	deleteCategoriesService,
 };
