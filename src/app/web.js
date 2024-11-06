@@ -19,7 +19,7 @@ web.use("/api/health", (req, res) => {
 });
 web.use((req, res) => {
 	res.status(404).json({
-		erros: true,
+		error: true,
 		message: "Page is not found",
 	});
 });

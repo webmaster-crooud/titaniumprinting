@@ -4,5 +4,6 @@ node_modules
 package-lock.json
 build
 log
+.vscode
 
 prisma/migrations

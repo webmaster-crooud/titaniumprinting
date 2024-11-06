@@ -1,11 +1,15 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../app/database.js";
-import { componentValidation, getComponentValidation } from "../validations/component.validation.js";
+import {
+	componentValidation,
+	getComponentValidation,
+} from "../validations/component.validation.js";
 import { validate } from "../validations/validation.js";
 import { ResponseError } from "../errors/Response.error.js";
 
 const create = async (request) => {
 	const requestBody = validate(componentValidation, request);
+
 	return await prisma.$transaction(
 		async (tx) => {
 			const findComponent = await tx.component.findFirst({
@@ -55,8 +59,8 @@ const list = async () => {
 		select: {
 			id: true,
 			name: true,
-			price: true,
-			cogs: true,
+			flag: true,
+			typeComponent: true,
 			createdAt: true,
 			updatedAt: true,
 		},
@@ -73,7 +77,8 @@ const listDisabled = async () => {
 		},
 	});
 
-	if (countComponent === 0) throw new ResponseError(404, "Components Disabled is empty");
+	if (countComponent === 0)
+		throw new ResponseError(404, "Components Disabled is empty");
 	return await prisma.component.findMany({
 		where: {
 			flag: "DISABLED",
@@ -81,10 +86,13 @@ const listDisabled = async () => {
 		select: {
 			id: true,
 			name: true,
-			price: true,
-			cogs: true,
+			flag: true,
+			typeComponent: true,
 			createdAt: true,
 			updatedAt: true,
+		},
+		orderBy: {
+			createdAt: "desc",
 		},
 	});
 };
@@ -99,16 +107,13 @@ const findById = async (componentId) => {
 		select: {
 			id: true,
 			name: true,
-			image: true,
 			flag: true,
 			price: true,
 			cogs: true,
 			typeComponent: true,
-			typePieces: true,
-			qtyPieces: true,
 			createdAt: true,
 			updatedAt: true,
-			canIncrase: true,
+			canIncrise: true,
 			qualities: {
 				select: {
 					id: true,
@@ -123,6 +128,7 @@ const findById = async (componentId) => {
 							weight: true,
 							price: true,
 							cogs: true,
+							length: true,
 						},
 					},
 				},
@@ -210,7 +216,8 @@ const deleted = async (componentId) => {
 			id: true,
 		},
 	});
-	if (!component) throw new ResponseError(400, "Components is not require to deleted");
+	if (!component)
+		throw new ResponseError(400, "Components is not require to deleted");
 
 	return await prisma.$transaction(async (tx) => {
 		const quality = await tx.quality.findMany({
@@ -248,4 +255,12 @@ const deleted = async (componentId) => {
 	});
 };
 
-export default { create, list, findById, update, disabled, deleted, listDisabled };
+export default {
+	create,
+	list,
+	findById,
+	update,
+	disabled,
+	deleted,
+	listDisabled,
+};

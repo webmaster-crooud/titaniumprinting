@@ -1,53 +1,169 @@
 import slug from "slug";
-import { getBarcodeValidation, productValidation } from "../validations/product.validation.js";
+import {
+	getBarcodeValidation,
+	productValidation,
+} from "../validations/product.validation.js";
 import { validate } from "../validations/validation.js";
 import { prisma } from "../app/database.js";
 import { ResponseError } from "../errors/Response.error.js";
 
-const create = async (request) => {
-	request = validate(productValidation, request);
-	if (request.slug === undefined) {
-		request.slug = slug(request.name);
-	} else {
-		request.slug = slug(request.slug);
-	}
-
-	const countProduct = await prisma.product.count({
+// !TODOS Update all methods
+const list = async () => {
+	const result = await prisma.product.findMany({
 		where: {
-			slug: request.slug,
-		},
-	});
-
-	if (countProduct != 0) throw new ResponseError(400, "Product with this slug is exist");
-
-	return await prisma.product.create({
-		data: {
-			name: request.name,
-			slug: request.slug,
-			image: request.image,
-			description: request.description,
-			category: {
-				connect: {
-					id: request.category_id,
+			OR: [
+				{
+					flag: "ACTIVED",
 				},
-			},
+				{ flag: "FAVOURITE" },
+			],
 		},
 		select: {
 			barcode: true,
 			name: true,
-			slug: true,
-			category: {
+			totalCogs: true,
+			totalPrice: true,
+			product_category: {
 				select: {
-					name: true,
+					categories: {
+						select: {
+							name: true,
+						},
+					},
 				},
 			},
-			description: true,
-			image: true,
+			service_product: {
+				select: {
+					services: {
+						select: {
+							name: true,
+						},
+					},
+				},
+			},
 			flag: true,
 			createdAt: true,
 			updatedAt: true,
 		},
+		orderBy: {
+			updatedAt: "desc",
+		},
 	});
+
+	return result;
+};
+const listDisabled = async () => {
+	const result = await prisma.product.findMany({
+		where: {
+			flag: "DISABLED",
+		},
+		select: {
+			barcode: true,
+			name: true,
+			totalCogs: true,
+			totalPrice: true,
+			product_category: {
+				select: {
+					categories: {
+						select: {
+							name: true,
+						},
+					},
+				},
+			},
+			flag: true,
+			createdAt: true,
+			updatedAt: true,
+		},
+		orderBy: {
+			updatedAt: "desc",
+		},
+	});
+
+	return result;
+};
+const create = async (request) => {
+	console.log(request);
+	request = validate(productValidation, request);
+
+	let slugged;
+	if (!slugged || slugged === "" || slugged === null) {
+		slugged = slug(request.name);
+	} else {
+		slugged = request.slug;
+	}
+
+	console.log(slugged);
+	const countProduct = await prisma.product.count({
+		where: {
+			slug: slugged,
+		},
+	});
+	if (countProduct !== 0) throw new ResponseError(400, "Product is exist");
+
+	const result = await prisma.$transaction(async (tx) => {
+		try {
+			const product = await tx.product.create({
+				data: {
+					name: request.name,
+					slug: slugged,
+					cover: request.cover,
+					description: request.description,
+				},
+				select: {
+					barcode: true,
+					name: true,
+					createdAt: true,
+					updatedAt: true,
+				},
+			});
+
+			const images = await tx.image.createMany({
+				data: (request.images || []).map((image) => ({
+					barcode: product.barcode,
+					name: image.name,
+					source: image.source,
+				})),
+				skipDuplicates: true,
+			});
+
+			const categoryProduct = await tx.categoryProduct.createMany({
+				data: (request.categoryProduct || []).map((category) => ({
+					barcode: product.barcode,
+					categoryId: category.categoryId,
+				})),
+				skipDuplicates: true,
+			});
+			const serviceProduct = await tx.serviceProduct.createMany({
+				data: (request.serviceProduct || []).map((service) => ({
+					barcodeService: service.barcodeService,
+					barcodeProduct: product.barcode,
+				})),
+			});
+
+			const productComponent = await tx.productComponent.createMany({
+				data: (request.productComponent || []).map((component) => ({
+					barcode: product.barcode,
+					componentId: component.componentId,
+					minQty: component.minQty,
+				})),
+				skipDuplicates: true,
+			});
+
+			return {
+				product,
+				images,
+				categoryProduct,
+				productComponent,
+				serviceProduct,
+			};
+		} catch (error) {
+			throw new ResponseError(400, error);
+		}
+	});
+
+	if (!result) throw new ResponseError(400, "Opsss... something wrong!");
+	return result;
 };
 
 const findByBarcode = async (barcode) => {
@@ -70,13 +186,78 @@ const findByBarcode = async (barcode) => {
 			name: true,
 			slug: true,
 			description: true,
-			category: {
+			cover: true,
+			images: {
 				select: {
 					name: true,
+					source: true,
 				},
 			},
+			product_category: {
+				select: {
+					categories: {
+						select: {
+							name: true,
+						},
+					},
+				},
+			},
+			service_product: {
+				select: {
+					services: {
+						select: {
+							name: true,
+						},
+					},
+				},
+				where: {
+					services: {
+						flag: "ACTIVED",
+					},
+				},
+			},
+			product_detail: {
+				where: {
+					component: {
+						flag: "ACTIVED",
+					},
+				},
+				select: {
+					minQty: true,
+					typePieces: true,
+					component: {
+						select: {
+							name: true,
+							price: true,
+							cogs: true,
+							canIncrise: true,
+							typeComponent: true,
+							qualities: {
+								where: {
+									flag: "ACTIVED",
+								},
+								select: {
+									name: true,
+									orientation: true,
+									sizes: {
+										select: {
+											price: true,
+											cogs: true,
+											width: true,
+											height: true,
+											length: true,
+											weight: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			totalCogs: true,
+			totalPrice: true,
 			flag: true,
-			image: true,
 			createdAt: true,
 			updatedAt: true,
 		},
@@ -84,81 +265,6 @@ const findByBarcode = async (barcode) => {
 
 	if (!result) throw new ResponseError(404, "Product is not found");
 	return result;
-};
-
-const list = async (page = 1, limit = 10) => {
-	const result = await prisma.product.findMany({
-		where: {
-			OR: [
-				{
-					flag: "ACTIVED",
-				},
-				{ flag: "FAVOURITE" },
-			],
-		},
-		select: {
-			barcode: true,
-			name: true,
-			image: true,
-			category: {
-				select: {
-					name: true,
-				},
-			},
-			flag: true,
-			createdAt: true,
-			updatedAt: true,
-		},
-		skip: (page - 1) * limit,
-		take: limit,
-		orderBy: {
-			updatedAt: "desc",
-		},
-	});
-
-	return result;
-};
-
-const listComponents = async () => {
-	return await prisma.component.findMany({
-		where: {
-			flag: "ACTIVED",
-		},
-		select: {
-			id: true,
-			name: true,
-			price: true,
-			typeComponent: true,
-			typePieces: true,
-			qualities: {
-				where: {
-					sizes: {
-						some: {
-							price: {
-								not: null, // Memastikan harga tidak null
-							},
-						},
-					},
-				},
-				select: {
-					sizes: {
-						where: {
-							NOT: {
-								OR: [{ price: null }, { price: 0 }],
-							},
-						},
-						select: {
-							price: true,
-						},
-						orderBy: {
-							price: "asc",
-						},
-						take: 1, // Mengambil ukuran dengan harga terendah
-					},
-				},
-			},
-		},
-	});
 };
 
 const update = async (barcode, request) => {
@@ -209,10 +315,69 @@ const update = async (barcode, request) => {
 	});
 };
 
+const listComponents = async () => {
+	return await prisma.component.findMany({
+		where: {
+			OR: [
+				{
+					flag: "ACTIVED",
+				},
+				{
+					flag: "FAVOURITE",
+				},
+			],
+		},
+		select: {
+			id: true,
+			name: true,
+			typeComponent: true,
+		},
+	});
+};
+const listCategories = async () => {
+	return await prisma.category.findMany({
+		where: {
+			OR: [
+				{
+					flag: "ACTIVED",
+				},
+				{
+					flag: "FAVOURITE",
+				},
+			],
+		},
+		select: {
+			id: true,
+			name: true,
+		},
+	});
+};
+const listService = async () => {
+	return await prisma.service.findMany({
+		where: {
+			OR: [
+				{
+					flag: "ACTIVED",
+				},
+				{
+					flag: "FAVOURITE",
+				},
+			],
+		},
+		select: {
+			name: true,
+			barcode: true,
+		},
+	});
+};
+
 export default {
 	create,
 	findByBarcode,
 	list,
+	listDisabled,
 	update,
 	listComponents,
+	listCategories,
+	listService,
 };

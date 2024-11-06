@@ -1,13 +1,41 @@
 import productService from "../services/product.service.js";
 
+const listController = async (req, res, next) => {
+	try {
+		const result = await productService.list();
+		res.status(200).json({
+			error: false,
+			message: "Successfully to get list data product",
+			data: result,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+const listDisabledController = async (req, res, next) => {
+	try {
+		const result = await productService.listDisabled();
+		res.status(200).json({
+			error: false,
+			message: "Successfully to get list data product",
+			data: result,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
 const createController = async (req, res, next) => {
 	try {
-		const result = await productService.create(req.body);
-		console.log(result);
+		// console.log(req.body.data);
+		const request = JSON.parse(req.body.data);
+		console.log("File: " + req.files);
+		console.log("request: " + request);
+		await productService.create(request);
+
 		res.status(201).json({
 			error: false,
 			message: "Successfully to create new Product",
-			data: result,
+			// data: result,
 		});
 	} catch (error) {
 		next(error);
@@ -21,23 +49,6 @@ const detailController = async (req, res, next) => {
 			error: false,
 			message: "Successfully to get product detail",
 			data: result,
-		});
-	} catch (error) {
-		next(error);
-	}
-};
-
-const listController = async (req, res, next) => {
-	try {
-		const page = 1;
-		const limit = 10;
-		const result = await productService.list(page, limit);
-		res.status(200).json({
-			error: false,
-			message: "Successfully to get list data product",
-			data: result,
-			page: page,
-			limit: limit,
 		});
 	} catch (error) {
 		next(error);
@@ -60,12 +71,36 @@ const updateController = async (req, res, next) => {
 	}
 };
 
-const listComponentsController = async (req, res, next) => {
+const listComponentsProductsController = async (req, res, next) => {
 	try {
 		const result = await productService.listComponents();
-		res.status(201).json({
+		res.status(200).json({
 			error: false,
 			message: "Successfully to get data list components",
+			data: result,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+const listCategoriesProductsController = async (req, res, next) => {
+	try {
+		const result = await productService.listCategories();
+		res.status(200).json({
+			error: false,
+			message: "Successfully to get data list categories",
+			data: result,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+const listServiceProductsController = async (req, res, next) => {
+	try {
+		const result = await productService.listService();
+		res.status(200).json({
+			error: false,
+			message: "Successfully to get data list categories",
 			data: result,
 		});
 	} catch (error) {
@@ -77,6 +112,9 @@ export default {
 	createController,
 	detailController,
 	listController,
-	listComponentsController,
+	listDisabledController,
+	listComponentsProductsController,
 	updateController,
+	listCategoriesProductsController,
+	listServiceProductsController,
 };
