@@ -7,3 +7,6 @@ log
 .vscode
 
 prisma/migrations
+
+public/cover/*
+public/images/*

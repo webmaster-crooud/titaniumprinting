@@ -35,7 +35,58 @@ apiRouter.post(
 	productController.createController
 );
 apiRouter.get("/products", productController.listController);
+
 apiRouter.get("/products/disabled", productController.listDisabledController);
+apiRouter.post(
+	"/products/category/create",
+	productController.createCategoryProductController
+);
+apiRouter.post(
+	"/products/services/create",
+	productController.createServiceProductController
+);
+apiRouter.post(
+	"/products/create/images/:barcode",
+	upload.single("images"),
+	productController.createImagesProductController
+);
+
+apiRouter.patch(
+	"/products/update/:barcode",
+	productController.updateProductController
+);
+apiRouter.patch(
+	"/products/update/cover/:barcode",
+	upload.single("images"),
+	productController.updateCoverProductController
+);
+apiRouter.patch(
+	"/products/update/images/:barcode/:id",
+	upload.single("images"),
+	productController.updateImagesProductController
+);
+apiRouter.delete(
+	"/products/delete/images/:barcode/:id",
+	productController.deleteImagesProductController
+);
+
+apiRouter.patch(
+	"/products/update/category/:barcode/:categoryId/",
+	productController.updateCategoryProductController
+);
+apiRouter.patch(
+	"/products/update/service/:barcode/:barcodeService",
+	productController.updateServiceProductController
+);
+
+apiRouter.delete(
+	"/products/delete/category/:barcode/:categoryId/",
+	productController.deleteCategoryProductController
+);
+apiRouter.delete(
+	"/products/delete/services/:barcode/:barcodeService/",
+	productController.deleteServicesProductController
+);
 apiRouter.get(
 	"/products/components",
 	productController.listComponentsProductsController
@@ -49,7 +100,12 @@ apiRouter.get(
 	productController.listServiceProductsController
 );
 apiRouter.get("/products/:barcode", productController.detailController);
-apiRouter.put("/products/:barcode", productController.updateController);
+apiRouter.patch("/products/:barcode", productController.changeFlagController);
+apiRouter.patch(
+	"/products/:barcode/favourite",
+	productController.favouriteController
+);
+apiRouter.delete("/products/:barcode", productController.deletedController);
 
 // API Components
 apiRouter.post("/components", componentController.createController);

@@ -147,6 +147,7 @@ model Quality {
 
 model Size {
   id Int @id @default(autoincrement())
+  name String? @db.VarChar(100) 
   qualityId Int @db.Int
   length Float? @db.Double
   width Float? @db.Double
@@ -157,6 +158,60 @@ model Size {
 
   quality Quality @relation(fields: [qualityId], references: [id], onDelete: Cascade)
   @@map("sizes")
+}
+
+model Cart {
+  transactionCode String @id @default(cuid()) @map("transaction_code")
+  files String @db.VarChar(100)
+  notes String? @db.VarChar(100)
+  totalPriceComponent Int @db.Int @default(0) @map("total_price_component")
+  totalPrice Decimal @db.Decimal(12,2) @default(0) @map("total_price")
+  totalCogs Decimal @db.Decimal(12,2) @default(0) @map("total_cost_of_goods_sold")
+  totalQty Int @db.Int @default(0) @map("total_quantity")
+  status STATUS_ORDER @default(PENDING)
+  userId String @db.VarChar(100)
+  user User @relation(fields: [userId], references: [id])
+
+  delivery Delivery?
+  @@map("cart")
+}
+
+model Delivery {
+  cartId String @id @default(cuid()) @map("cart_id") @unique
+  courier String @db.VarChar(100)
+  price Decimal @db.Decimal(12,2)
+  resi String? @db.VarChar(100)
+
+  cart Cart @relation(fields: [cartId], references: [transactionCode])
+}
+
+model User {
+  id String @id @default(cuid())
+  firstName String @db.VarChar(100) @map("first_name")
+  lastName String @db.VarChar(100) @map("last_name")
+  phone Int @db.Int @unique
+  email String @db.VarChar(100) @unique
+  addresses Address[]
+  cart Cart[]
+  role ROLE @default(MEMBER)
+  @@map("users")
+}
+
+
+model Address {
+  id Int @id @default(autoincrement())
+  userId String @db.VarChar(100)
+  name String @db.VarChar(100)
+  street String @db.VarChar(100)
+  city String @db.VarChar(100)
+  province String @db.VarChar(100) 
+  country String @db.VarChar(100)
+  postalCode Int @db.Int @map("postal_code")
+  building String? @db.VarChar(100)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("addresses")
 }
 
 
@@ -177,4 +232,20 @@ enum TYPECOMPONENT {
 enum CATEGORY {
   PRODUCT
   SERVICE
+}
+
+enum STATUS_ORDER {
+  PENDING
+  PAYMENT
+  PROCESSING
+  DELIVERY
+  FINISH
+  RETURN
+}
+
+enum ROLE {
+  DEV
+  OWNER
+  ADMIN
+  MEMBER
 }

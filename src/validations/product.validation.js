@@ -1,8 +1,8 @@
 import Joi from "joi";
 
 export const productValidation = Joi.object({
-	name: Joi.string().min(5).max(100).required(),
-	slug: Joi.string().min(5).max(100).optional().allow(""),
+	name: Joi.string().min(1).max(100).required(),
+	slug: Joi.string().min(1).max(100).optional().allow(""),
 	cover: Joi.string().optional().allow(""),
 	description: Joi.string().max(1000).optional().allow(""),
 	totalPrice: Joi.number().optional().allow(null),
@@ -24,4 +24,28 @@ export const productValidation = Joi.object({
 	}),
 });
 
+export const productUpdateValidation = Joi.object({
+	name: Joi.string().min(5).max(100).required(),
+	slug: Joi.string().min(5).max(100).optional().allow(""),
+	description: Joi.string().max(1000).optional().allow(""),
+});
+
 export const getBarcodeValidation = Joi.string().required();
+export const getCategoryProductValidation = Joi.object({
+	barcode: Joi.string().optional(),
+	categoryId: Joi.number().required(),
+});
+
+export const getServiceProductValidation = Joi.object({
+	barcodeProduct: Joi.string().optional(),
+	barcodeService: Joi.string().required(),
+});
+
+export const coverProductValidation = Joi.object({
+	cover: Joi.string().required(),
+});
+
+export const imagesProductValidation = Joi.object({
+	name: Joi.string().required(),
+	source: Joi.string().required(),
+});
