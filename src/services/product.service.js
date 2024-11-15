@@ -1,6 +1,11 @@
 import slug from "slug";
 import {
+	coverProductValidation,
 	getBarcodeValidation,
+	getCategoryProductValidation,
+	getServiceProductValidation,
+	imagesProductValidation,
+	productUpdateValidation,
 	productValidation,
 } from "../validations/product.validation.js";
 import { validate } from "../validations/validation.js";
@@ -146,6 +151,7 @@ const create = async (request) => {
 					barcode: product.barcode,
 					componentId: component.componentId,
 					minQty: component.minQty,
+					typePieces: component.typePieces,
 				})),
 				skipDuplicates: true,
 			});
@@ -165,7 +171,6 @@ const create = async (request) => {
 	if (!result) throw new ResponseError(400, "Opsss... something wrong!");
 	return result;
 };
-
 const findByBarcode = async (barcode) => {
 	barcode = validate(getBarcodeValidation, barcode);
 	const result = await prisma.product.findFirst({
@@ -182,13 +187,14 @@ const findByBarcode = async (barcode) => {
 			],
 		},
 		select: {
-			barcode: true,
 			name: true,
 			slug: true,
 			description: true,
 			cover: true,
+
 			images: {
 				select: {
+					id: true,
 					name: true,
 					source: true,
 				},
@@ -197,26 +203,13 @@ const findByBarcode = async (barcode) => {
 				select: {
 					categories: {
 						select: {
+							id: true,
 							name: true,
 						},
 					},
 				},
 			},
-			service_product: {
-				select: {
-					services: {
-						select: {
-							name: true,
-						},
-					},
-				},
-				where: {
-					services: {
-						flag: "ACTIVED",
-					},
-				},
-			},
-			product_detail: {
+			product_component: {
 				where: {
 					component: {
 						flag: "ACTIVED",
@@ -227,30 +220,23 @@ const findByBarcode = async (barcode) => {
 					typePieces: true,
 					component: {
 						select: {
+							id: true,
 							name: true,
 							price: true,
 							cogs: true,
 							canIncrise: true,
+							description: true,
 							typeComponent: true,
-							qualities: {
-								where: {
-									flag: "ACTIVED",
-								},
-								select: {
-									name: true,
-									orientation: true,
-									sizes: {
-										select: {
-											price: true,
-											cogs: true,
-											width: true,
-											height: true,
-											length: true,
-											weight: true,
-										},
-									},
-								},
-							},
+						},
+					},
+				},
+			},
+			service_product: {
+				select: {
+					services: {
+						select: {
+							barcode: true,
+							name: true,
 						},
 					},
 				},
@@ -266,55 +252,6 @@ const findByBarcode = async (barcode) => {
 	if (!result) throw new ResponseError(404, "Product is not found");
 	return result;
 };
-
-const update = async (barcode, request) => {
-	request = validate(productValidation, request);
-
-	const findProduct = await prisma.product.findFirst({
-		where: {
-			OR: [
-				{ barcode: barcode, flag: "ACTIVED" },
-				{ barcode: barcode, flag: "FAVOURITE" },
-			],
-		},
-		select: {
-			barcode: true,
-		},
-	});
-
-	if (!findProduct) throw new ResponseError(404, "Products is not found");
-	return await prisma.product.update({
-		where: {
-			barcode: findProduct.barcode,
-		},
-		data: {
-			name: request.name,
-			image: request.image,
-			description: request.description,
-			category: {
-				connect: {
-					id: request.category_id,
-				},
-			},
-		},
-
-		select: {
-			barcode: true,
-			slug: true,
-			name: true,
-			image: true,
-			category: {
-				select: {
-					name: true,
-				},
-			},
-			flag: true,
-			createdAt: true,
-			updatedAt: true,
-		},
-	});
-};
-
 const listComponents = async () => {
 	return await prisma.component.findMany({
 		where: {
@@ -370,14 +307,610 @@ const listService = async () => {
 		},
 	});
 };
+const changeFlag = async (barcode) => {
+	barcode = validate(getBarcodeValidation, barcode);
+
+	const product = await prisma.product.findUnique({
+		where: {
+			barcode: barcode,
+		},
+	});
+
+	if (!product) throw new ResponseError(404, "Product is not found!");
+
+	let newFlag = product.flag;
+	if (newFlag === "ACTIVED" || newFlag === "FAVOURITE") {
+		newFlag = "DISABLED";
+	} else {
+		newFlag = "ACTIVED";
+	}
+	return await prisma.product.update({
+		where: {
+			barcode: barcode,
+		},
+		data: {
+			flag: newFlag,
+		},
+		select: {
+			barcode: true,
+			name: true,
+			flag: true,
+		},
+	});
+};
+const favourite = async (barcode) => {
+	barcode = validate(getBarcodeValidation, barcode);
+
+	const product = await prisma.product.findFirst({
+		where: {
+			barcode: barcode,
+		},
+		select: {
+			barcode: true,
+			flag: true,
+		},
+	});
+
+	console.log(product);
+
+	if (product.flag === "DISABLED")
+		throw new ResponseError(400, "Products is disabled");
+	if (!product) throw new ResponseError(404, "Product is not found!");
+
+	if (product.flag === "ACTIVED") {
+		return await prisma.product.update({
+			where: {
+				barcode: barcode,
+			},
+			data: {
+				flag: "FAVOURITE",
+			},
+			select: {
+				barcode: true,
+				name: true,
+				flag: true,
+			},
+		});
+	} else {
+		return await prisma.product.update({
+			where: {
+				barcode: barcode,
+			},
+			data: {
+				flag: "ACTIVED",
+			},
+			select: {
+				barcode: true,
+				name: true,
+				flag: true,
+			},
+		});
+	}
+};
+const deleted = async (barcode) => {
+	barcode = validate(getBarcodeValidation, barcode);
+
+	const result = await prisma.$transaction(async (tx) => {
+		const product = await tx.product.findFirst({
+			where: {
+				barcode: barcode,
+				flag: "DISABLED",
+			},
+			select: {
+				barcode: true,
+				name: true,
+			},
+		});
+
+		if (!product)
+			throw new ResponseError(404, `Product with this barcode is Not Found!`);
+
+		const images = await tx.image.deleteMany({
+			where: {
+				barcode: product.barcode,
+			},
+		});
+
+		const categories = await tx.categoryProduct.deleteMany({
+			where: {
+				barcode: product.barcode,
+			},
+		});
+
+		const services = await tx.serviceProduct.deleteMany({
+			where: {
+				barcodeProduct: product.barcode,
+			},
+		});
+
+		const component = await tx.productComponent.deleteMany({
+			where: {
+				barcode: product.barcode,
+			},
+		});
+
+		const dataProduct = await tx.product.delete({
+			where: {
+				barcode: product.barcode,
+			},
+		});
+
+		return { images, categories, services, component, dataProduct };
+	});
+
+	if (!result) {
+		throw new ResponseError(400, "Oppsss... something wrong!");
+	} else {
+		return result;
+	}
+};
+const updateProduct = async (barcode, request) => {
+	request = validate(productUpdateValidation, request);
+
+	const product = await prisma.product.findUnique({
+		where: {
+			barcode: barcode,
+		},
+		select: {
+			barcode: true,
+			slug: true,
+		},
+	});
+
+	if (!product) throw new ResponseError(404, "Product is not found!");
+	if (request.slug === product.slug) {
+		return await prisma.product.update({
+			where: {
+				barcode: product.barcode,
+			},
+			data: {
+				name: request.name,
+				description: request.description,
+			},
+			select: {
+				barcode: true,
+				name: true,
+			},
+		});
+	} else {
+		return await prisma.product.update({
+			where: {
+				barcode: product.barcode,
+			},
+			data: {
+				name: request.name,
+				slug: request.slug,
+				description: request.description,
+			},
+			select: {
+				barcode: true,
+				name: true,
+			},
+		});
+	}
+};
+const updateCategoryProduct = async (params, request) => {
+	const barcode = params.barcode;
+	const categoryId = parseInt(params.categoryId);
+
+	if (!barcode && !categoryId) throw new ResponseError(400, "Bad Request");
+
+	request = validate(getCategoryProductValidation, request);
+	let productCategory = await prisma.categoryProduct.findFirst({
+		where: {
+			barcode: barcode,
+			categoryId: categoryId,
+		},
+		select: {
+			barcode: true,
+			categoryId: true,
+		},
+	});
+
+	if (!productCategory)
+		throw new ResponseError(404, "Category is not found in this products");
+
+	if (
+		productCategory.barcode === barcode &&
+		productCategory.categoryId === request.categoryId
+	) {
+		throw new ResponseError(400, "Nothing changes");
+	}
+	productCategory = await prisma.categoryProduct.findFirst({
+		where: {
+			barcode: barcode,
+			categoryId: request.categoryId,
+		},
+		select: {
+			barcode: true,
+			categoryId: true,
+		},
+	});
+	if (productCategory) {
+		throw new ResponseError(400, "Category is already exist in this products");
+	} else {
+		const result = await prisma.categoryProduct.update({
+			where: {
+				barcode_categoryId: {
+					barcode: barcode,
+					categoryId: categoryId,
+				},
+			},
+			data: {
+				barcode: barcode,
+				categoryId: request.categoryId,
+			},
+			select: {
+				categories: {
+					select: {
+						name: true,
+					},
+				},
+			},
+		});
+
+		if (!result) {
+			throw new ResponseError(404, "Oppss something wrong!");
+		} else {
+			return result;
+		}
+	}
+};
+const createCategoryProduct = async (request) => {
+	request = validate(getCategoryProductValidation, request);
+
+	const product = await prisma.categoryProduct.findFirst({
+		where: {
+			barcode: request.barcode,
+			categoryId: request.categoryId,
+		},
+		select: {
+			categories: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+
+	if (product)
+		throw new ResponseError(400, `${product.categories.name} is already Exist`);
+
+	const result = await prisma.categoryProduct.create({
+		data: request,
+		select: {
+			barcode: true,
+			categories: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+
+	if (!result) {
+		throw new ResponseError(400, "Oppss... Something wrong!");
+	} else {
+		return result;
+	}
+};
+const deleteCategoryProduct = async (params) => {
+	const barcode = params.barcode;
+	const categoryId = parseInt(params.categoryId);
+
+	if (!barcode && !categoryId) throw new ResponseError(400, "Bad Request");
+
+	let productCategory = await prisma.categoryProduct.findFirst({
+		where: {
+			barcode: barcode,
+			categoryId: categoryId,
+		},
+		select: {
+			barcode: true,
+			categoryId: true,
+		},
+	});
+
+	if (!productCategory)
+		throw new ResponseError(404, "Category is not found in this products");
+
+	const result = await prisma.categoryProduct.delete({
+		where: {
+			barcode_categoryId: {
+				barcode: barcode,
+				categoryId: categoryId,
+			},
+		},
+		select: {
+			categories: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+
+	if (!result) {
+		throw new ResponseError(404, "Oppss something wrong!");
+	} else {
+		return result;
+	}
+};
+
+const updateServiceProduct = async (params, request) => {
+	const barcode = params.barcode;
+	const barcodeService = params.barcodeService;
+
+	if (!barcode && !barcodeService) throw new ResponseError(400, "Bad Request");
+
+	request = validate(getServiceProductValidation, request);
+	console.log(barcode, barcodeService, request);
+	let productService = await prisma.serviceProduct.findFirst({
+		where: {
+			barcodeProduct: barcode,
+			barcodeService: barcodeService,
+		},
+		select: {
+			barcodeProduct: true,
+			barcodeService: true,
+		},
+	});
+
+	if (!productService)
+		throw new ResponseError(404, "Service is not found in this products");
+
+	if (
+		productService.barcodeProduct === barcode &&
+		productService.barcodeService === request.barcodeService
+	) {
+		throw new ResponseError(400, "Nothing changes");
+	}
+	productService = await prisma.serviceProduct.findFirst({
+		where: {
+			barcodeProduct: barcode,
+			barcodeService: request.barcodeService,
+		},
+		select: {
+			barcodeProduct: true,
+			barcodeService: true,
+		},
+	});
+	if (productService) {
+		throw new ResponseError(400, "Service is already exist in this products");
+	} else {
+		const result = await prisma.serviceProduct.update({
+			where: {
+				barcodeProduct_barcodeService: {
+					barcodeProduct: barcode,
+					barcodeService: barcodeService,
+				},
+			},
+			data: {
+				barcodeProduct: barcode,
+				barcodeService: request.barcodeService,
+			},
+			select: {
+				services: {
+					select: {
+						name: true,
+					},
+				},
+			},
+		});
+
+		if (!result) {
+			throw new ResponseError(404, "Oppss something wrong!");
+		} else {
+			return result;
+		}
+	}
+};
+
+const createServiceProduct = async (request) => {
+	request = validate(getServiceProductValidation, request);
+
+	const product = await prisma.serviceProduct.findFirst({
+		where: {
+			barcodeProduct: request.barcodeProduct,
+			barcodeService: request.barcodeService,
+		},
+		select: {
+			services: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+
+	if (product)
+		throw new ResponseError(400, `${product.services.name} is already Exist`);
+
+	const result = await prisma.serviceProduct.create({
+		data: request,
+		select: {
+			barcodeProduct: true,
+			services: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+
+	if (!result) {
+		throw new ResponseError(400, "Oppss... Something wrong!");
+	} else {
+		return result;
+	}
+};
+
+const deleteServiceProduct = async (params) => {
+	const barcode = params.barcode;
+	const barcodeService = params.barcodeService;
+
+	if (!barcode && !barcodeService) throw new ResponseError(400, "Bad Request");
+
+	let productCategory = await prisma.serviceProduct.findFirst({
+		where: {
+			barcodeProduct: barcode,
+			barcodeService: barcodeService,
+		},
+		select: {
+			barcodeProduct: true,
+			barcodeService: true,
+		},
+	});
+
+	if (!productCategory)
+		throw new ResponseError(404, "Category is not found in this products");
+
+	const result = await prisma.serviceProduct.delete({
+		where: {
+			barcodeProduct_barcodeService: {
+				barcodeProduct: barcode,
+				barcodeService: barcodeService,
+			},
+		},
+		select: {
+			services: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+
+	if (!result) {
+		throw new ResponseError(404, "Oppss something wrong!");
+	} else {
+		return result;
+	}
+};
+
+const updateCoverProduct = async (barcode, request) => {
+	request = validate(coverProductValidation, request);
+
+	const product = await prisma.product.findFirst({
+		where: {
+			barcode: barcode,
+		},
+		select: {
+			barcode: true,
+			cover: true,
+		},
+	});
+	if (!product) throw new ResponseError(404, "Product is not found!");
+
+	return await prisma.product.update({
+		where: {
+			barcode: product.barcode,
+			cover: product.cover,
+		},
+		data: {
+			cover: request.cover,
+		},
+		select: {
+			name: true,
+		},
+	});
+};
+const updateImagesProduct = async (barcode, id, request) => {
+	request = validate(imagesProductValidation, request);
+
+	const images = await prisma.image.findFirst({
+		where: {
+			id: id,
+			barcode: barcode,
+		},
+		select: {
+			id: true,
+			barcode: true,
+		},
+	});
+	if (!images) throw new ResponseError(404, "Image is not found!");
+
+	return await prisma.image.update({
+		where: {
+			id: images.id,
+			barcode: images.barcode,
+		},
+		data: {
+			name: request.name,
+			source: request.source,
+		},
+		select: {
+			product: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+};
+const deleteImagesProduct = async (barcode, id) => {
+	const images = await prisma.image.findFirst({
+		where: {
+			id: id,
+			barcode: barcode,
+		},
+		select: {
+			id: true,
+			barcode: true,
+		},
+	});
+	if (!images) throw new ResponseError(404, "Image is not found!");
+
+	return await prisma.image.delete({
+		where: {
+			id: images.id,
+			barcode: images.barcode,
+		},
+		select: {
+			product: {
+				select: {
+					name: true,
+				},
+			},
+		},
+	});
+};
+
+const createImagesProduct = async (barcode, request) => {
+	request = validate(imagesProductValidation, request);
+	return await prisma.image.create({
+		data: {
+			barcode: barcode,
+			name: request.name,
+			source: request.source,
+		},
+		select: {
+			name: true,
+		},
+	});
+};
 
 export default {
 	create,
 	findByBarcode,
 	list,
 	listDisabled,
-	update,
 	listComponents,
 	listCategories,
 	listService,
+
+	changeFlag,
+	favourite,
+	deleted,
+	updateProduct,
+	updateCategoryProduct,
+	createCategoryProduct,
+	deleteCategoryProduct,
+	updateServiceProduct,
+	createServiceProduct,
+	deleteServiceProduct,
+	updateCoverProduct,
+	updateImagesProduct,
+	deleteImagesProduct,
+	createImagesProduct,
 };
