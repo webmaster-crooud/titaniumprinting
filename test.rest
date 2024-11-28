@@ -1,0 +1,16 @@
+###
+GET   http://localhost:3001/api/auth/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTN5NTVmbjYwMDAwdWU0MWhpMHlzcG1uIiwiZW1haWwiOiJtaWthZWxhZGl0eWFuLjk5QGdtYWlsLmNvbSIsInVzZXJuYW1lIjpudWxsLCJpYXQiOjE3MzI3Nzg1ODYsImV4cCI6MTczMjc3OTQ4Nn0.KRG9kRruC-Cl3XFknV3rAX-qBW5ryTRY1DL19BUNk6Y
+###
+POST http://localhost:3001/api/auth/login
+content-type: application/json
+
+{
+    "email": "mikaeladityan.99@gmail.com",
+    "password": "12345678910"
+}
+
+###
+GET   http://localhost:3001/api/auth/token
+###
+DELETE  http://localhost:3001/api/auth/logout

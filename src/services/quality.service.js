@@ -58,6 +58,7 @@ const create = async (request, componentId) => {
 				sizes: {
 					select: {
 						qualityId: true,
+						name: true,
 						id: true,
 						width: true,
 						height: true,

@@ -188,13 +188,48 @@ model Delivery {
 model User {
   id String @id @default(cuid())
   firstName String @db.VarChar(100) @map("first_name")
-  lastName String @db.VarChar(100) @map("last_name")
-  phone Int @db.Int @unique
+  lastName String? @db.VarChar(100) @map("last_name")
+  phone Int? @db.Int @unique
   email String @db.VarChar(100) @unique
+  role ROLE @default(MEMBER)
   addresses Address[]
   cart Cart[]
-  role ROLE @default(MEMBER)
+  account Account?
+  emailVerify EmailVerify?
+  refreshToken RefreshToken? 
   @@map("users")
+}
+
+model Account{
+  email String @db.VarChar(100) @unique
+  username String? @db.VarChar(100) @unique
+  password String? @db.VarChar(100)
+  ipAddress String @db.VarChar(100) @map("ip_address") 
+  userAgent String @db.Text @map("user_agent")
+  googleId String? @db.VarChar(100) @map("google_id") @unique
+  status ACCOUNTSTATUS @default(PENDING)
+  user User @relation(fields: [email], references: [email], onDelete: Cascade)
+  @@map("accounts")
+}
+
+
+model RefreshToken {
+  email     String   @unique
+  token     String   @db.Text
+  expiredAt DateTime @db.Timestamp(0) @default(dbgenerated("(CURRENT_TIMESTAMP + INTERVAL 1 DAY)")) @map("expired_at")
+  createdAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
+
+  users User @relation(references: [email], fields: [email])
+  @@map("refresh_token")
+}
+
+model EmailVerify {
+  email String @db.VarChar(100) @unique
+  token String @db.VarChar(100) @default(uuid())
+  type TYPEVERIFY @default(REGISTER)
+  expiredAt DateTime @db.Timestamp(0) @default(dbgenerated("(CURRENT_TIMESTAMP + INTERVAL 5 MINUTE)")) @map("expired_at")
+  createdAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
+  user User @relation(fields: [email], references: [email], onDelete: Cascade)
 }
 
 
@@ -214,6 +249,17 @@ model Address {
   @@map("addresses")
 }
 
+enum ACCOUNTSTATUS {
+  PENDING
+  ACTIVED
+  BANNED
+  FAVOURITE
+}
+
+enum TYPEVERIFY {
+  REGISTER
+  CHANGEPASSWORD
+}
 
 enum FLAG {
   ACTIVED
@@ -244,8 +290,8 @@ enum STATUS_ORDER {
 }
 
 enum ROLE {
-  DEV
+  DEVELOPER
   OWNER
-  ADMIN
+  ADMIN 
   MEMBER
 }

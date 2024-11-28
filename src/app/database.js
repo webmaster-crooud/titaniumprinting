@@ -36,4 +36,6 @@ prisma.$on("query", (e) => {
 prisma.$on("info", (e) => logger.info(e));
 prisma.$on("warn", (e) => logger.warn(e));
 
-prisma.$on("error", (e) => errLogger.error(`"target": ${e.target}, message: ${e.message} `));
+prisma.$on("error", (e) =>
+	errLogger.error(`"target": ${e.target}, message: ${e.message} `)
+);

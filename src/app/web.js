@@ -1,20 +1,30 @@
 import express from "express";
 import { errorMiddleware } from "../middlewares/error.middleware.js";
-import { apiRouter } from "../routes/api.route.js";
 import cors from "cors";
 import path from "path";
-import { appRoute } from "../routes/app.route.js";
-import { rajaRouter } from "../routes/rajaongkir.route.js";
-
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import { apiRouter } from "../routes/api.routes.js";
+import { appRoute } from "../routes/app.routes.js";
+import { authRoutes } from "../routes/auth.routes.js";
+import dotenv from "dotenv";
+dotenv.config();
 export const web = express();
 
-web.use(express.json());
+web.use(helmet());
 web.use(
 	cors({
-		origin: ["http://localhost:3000", "http://localhost:5173"],
+		origin: [
+			`${process.env.APP_BASEURL}:3000`,
+			`${process.env.APP_BASEURL}:5173`,
+		],
 		credentials: true,
 	})
 );
+web.use(cookieParser());
+web.use(express.json());
+
+web.use("/api/auth", authRoutes);
 web.use("/api/v1", apiRouter);
 web.use("/api/public", appRoute);
 web.use("/api/health", (req, res) => {
