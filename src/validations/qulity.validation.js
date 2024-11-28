@@ -1,5 +1,6 @@
 import Joi from "joi";
 export const sizeValidation = Joi.object({
+	name: Joi.string().min(1).max(100).optional().allow(""),
 	width: Joi.number().optional(),
 	length: Joi.number().optional(),
 	height: Joi.number().optional(),
