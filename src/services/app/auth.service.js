@@ -1,6 +1,6 @@
 import { prisma } from "../../app/database.js";
 import { ResponseError } from "../../errors/Response.error.js";
-import { formatUnix } from "../../libs/moment.js";
+import { formatTime, formatUnix } from "../../libs/moment.js";
 import {
 	emailVerifyValidation,
 	loginValidation,
@@ -191,10 +191,15 @@ const resendEmailVerify = async (email) => {
 
 	let now = formatUnix(new Date());
 	const expired = formatUnix(findEmailVerify.expiredAt);
+
+	console.log(formatTime(new Date()));
+	console.log(formatTime(findEmailVerify.expiredAt));
 	if (now < expired)
 		throw new ResponseError(
 			400,
-			"Token is not expired, if you want resend email verification pease wait!"
+			`Token is not expired, if you want to resend email verification please wait until ${formatTime(
+				findEmailVerify.expiredAt
+			)}`
 		);
 
 	now = new Date();
@@ -260,7 +265,10 @@ const login = async (request) => {
 			"Account is not ready active, please confirmation activation email varify first!"
 		);
 
-	const match = bcrypt.compare(request.password, account.password);
+	console.log(request.password);
+	console.log(account.password);
+	const match = bcrypt.compareSync(request.password, account.password);
+	console.log(match);
 	if (!match)
 		throw new ResponseError(400, "Login is not valid, check your input!");
 
@@ -291,10 +299,19 @@ const login = async (request) => {
 				expiredAt: new Date(now.getTime() + 5 * 60 * 1000),
 			},
 		});
-		return { accessToken, refreshToken };
 	} else {
-		return { accessToken };
+		const now = new Date();
+		await prisma.refreshToken.update({
+			where: {
+				email: account.email,
+			},
+			data: {
+				token: refreshToken,
+				expiredAt: new Date(now.getTime() + 5 * 60 * 1000),
+			},
+		});
 	}
+	return { accessToken, refreshToken };
 };
 
 const logout = async (req) => {

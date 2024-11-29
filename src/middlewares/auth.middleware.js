@@ -8,6 +8,7 @@ export const verifyToken = (req, res, next) => {
 	const token = authHeader && authHeader.split(" ")[1];
 	if (token === null) throw new ResponseError(401, "Unauthorization");
 
+	console.log(token);
 	try {
 		jwt.verify(token, process.env.JWT_ACCESS_TOKEN, (err, decoded) => {
 			if (err) throw new ResponseError(403, "Forbidden");

@@ -7,7 +7,6 @@ dotenv.config();
 export const refreshToken = async (req, res, next) => {
 	try {
 		const refreshToken = req.cookies.refreshToken;
-		console.log(refreshToken);
 		if (!refreshToken) throw new ResponseError(401, "Unauthorization");
 		const account = await prisma.refreshToken.findFirst({
 			where: {
