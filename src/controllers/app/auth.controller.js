@@ -7,7 +7,6 @@ dotenv.config();
 
 const listUserController = async (req, res, next) => {
 	try {
-		console.log(req.email);
 		const result = await authService.listUsers();
 		res.status(200).json({
 			data: result,
@@ -103,15 +102,20 @@ const loginController = async (req, res, next) => {
 			throw new ResponseError(400, "Bad Request");
 
 		const result = await authService.login(request);
-		console.log(result);
+		// Tambahkan header ini
+		res.set("Access-Control-Allow-Origin", "http://localhost:5173");
+		res.set("Access-Control-Allow-Credentials", "true");
+
 		res.cookie("refreshToken", result.refreshToken, {
 			httpOnly: true,
 			maxAge: 24 * 60 * 60 * 1000,
-			// secure: true, // production only
+			secure: false, // Ubah ke false untuk development
+			sameSite: "lax", // Coba 'none' jika masih bermasalah
+			// domain: 'localhost' // Opsional untuk local
 		});
 		res.status(200).json({
 			message: "Successfully login",
-			data: result.accessToken,
+			token: result.accessToken,
 		});
 	} catch (error) {
 		next(error);

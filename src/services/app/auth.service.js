@@ -192,8 +192,8 @@ const resendEmailVerify = async (email) => {
 	let now = formatUnix(new Date());
 	const expired = formatUnix(findEmailVerify.expiredAt);
 
-	console.log(formatTime(new Date()));
-	console.log(formatTime(findEmailVerify.expiredAt));
+	// console.log(formatTime(new Date()));
+	// console.log(formatTime(findEmailVerify.expiredAt));
 	if (now < expired)
 		throw new ResponseError(
 			400,
@@ -250,9 +250,13 @@ const login = async (request) => {
 			username: true,
 			password: true,
 			status: true,
+			googleId: true,
 			user: {
 				select: {
 					id: true,
+					firstName: true,
+					lastName: true,
+					role: true,
 				},
 			},
 		},
@@ -265,17 +269,17 @@ const login = async (request) => {
 			"Account is not ready active, please confirmation activation email varify first!"
 		);
 
-	console.log(request.password);
-	console.log(account.password);
 	const match = bcrypt.compareSync(request.password, account.password);
-	console.log(match);
+
 	if (!match)
 		throw new ResponseError(400, "Login is not valid, check your input!");
 
 	const payload = {
-		userId: account.user.id,
 		email: account.email,
 		username: account.username,
+		firstName: account.user.firstName,
+		lastName: account.user.lastName,
+		role: account.user.role,
 	};
 	const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN, {
 		expiresIn: "1m",
@@ -316,6 +320,7 @@ const login = async (request) => {
 
 const logout = async (req) => {
 	const refreshToken = req.cookies.refreshToken;
+
 	if (!refreshToken) throw new ResponseError(204, "No Content");
 	const account = await prisma.refreshToken.findFirst({
 		where: {

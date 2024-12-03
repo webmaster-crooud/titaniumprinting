@@ -308,7 +308,7 @@ const deleteCategoriesService = async (params) => {
 
 	const barcode = params.barcode;
 	const categoryId = parseInt(params.categoryId);
-	console.log(barcode, categoryId);
+	// console.log(barcode, categoryId);
 
 	const result = await prisma.categoryService.deleteMany({
 		where: {

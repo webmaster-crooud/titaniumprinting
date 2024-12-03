@@ -18,6 +18,9 @@ export const refreshToken = async (req, res, next) => {
 				users: {
 					select: {
 						id: true,
+						firstName: true,
+						lastName: true,
+						role: true,
 						account: {
 							select: {
 								username: true,
@@ -31,16 +34,18 @@ export const refreshToken = async (req, res, next) => {
 		jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN, (err, decoded) => {
 			if (err) throw new ResponseError(403, "Forbidden");
 			const payload = {
-				userId: account.users.id,
 				email: account.email,
 				username: account.users.account.username,
+				firstName: account.users.firstName,
+				lastName: account.users.lastName,
+				role: account.users.role,
 			};
 
 			const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN, {
 				expiresIn: "1m",
 			});
 
-			res.status(200).json({ data: accessToken });
+			res.status(200).json({ token: accessToken });
 		});
 	} catch (error) {
 		next(error);

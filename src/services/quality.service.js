@@ -150,8 +150,8 @@ const updateSize = async (reqParams, requestBody) => {
 	const sizeId = validate(getSizeValidation, reqParams.sizeId);
 	const qualityId = validate(getQualityValidation, reqParams.qualityId);
 
-	console.log("Size:", sizeId);
-	console.log("Quality:", qualityId);
+	// console.log("Size:", sizeId);
+	// console.log("Quality:", qualityId);
 	const quality = await prisma.quality.findUnique({
 		where: {
 			id: qualityId,
