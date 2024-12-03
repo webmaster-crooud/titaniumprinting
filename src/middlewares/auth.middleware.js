@@ -12,7 +12,6 @@ export const verifyToken = (req, res, next) => {
 		jwt.verify(token, process.env.JWT_ACCESS_TOKEN, (err, decoded) => {
 			if (err) throw new ResponseError(403, "Forbidden");
 			req.email = decoded.email;
-			console.log(req.email);
 			next();
 		});
 	} catch (error) {

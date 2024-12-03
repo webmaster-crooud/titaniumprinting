@@ -88,7 +88,7 @@ const listDisabled = async () => {
 	return result;
 };
 const create = async (request) => {
-	console.log(request);
+	// console.log(request);
 	request = validate(productValidation, request);
 
 	let slugged;
@@ -98,7 +98,7 @@ const create = async (request) => {
 		slugged = request.slug;
 	}
 
-	console.log(slugged);
+	// console.log(slugged);
 	const countProduct = await prisma.product.count({
 		where: {
 			slug: slugged,
@@ -351,7 +351,7 @@ const favourite = async (barcode) => {
 		},
 	});
 
-	console.log(product);
+	// console.log(product);
 
 	if (product.flag === "DISABLED")
 		throw new ResponseError(400, "Products is disabled");
@@ -644,7 +644,7 @@ const updateServiceProduct = async (params, request) => {
 	if (!barcode && !barcodeService) throw new ResponseError(400, "Bad Request");
 
 	request = validate(getServiceProductValidation, request);
-	console.log(barcode, barcodeService, request);
+	// console.log(barcode, barcodeService, request);
 	let productService = await prisma.serviceProduct.findFirst({
 		where: {
 			barcodeProduct: barcode,

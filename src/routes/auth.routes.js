@@ -1,7 +1,6 @@
 import express from "express";
 import { oauth2Client } from "../libs/generateToken.js";
 import authController from "../controllers/app/auth.controller.js";
-import { verifyToken } from "../middlewares/auth.middleware.js";
 import { refreshToken } from "../controllers/app/refreshToken.controller.js";
 export const authRoutes = express.Router();
 
@@ -36,7 +35,7 @@ authRoutes.get("/callback", async (req, res) => {
 	}
 });
 
-authRoutes.get("/users", verifyToken, authController.listUserController);
+authRoutes.get("/users", authController.listUserController);
 authRoutes.post("/login", authController.loginController);
 authRoutes.post("/register", authController.registerController);
 authRoutes.patch("/email-verify/:email", authController.resendEmailVerify);

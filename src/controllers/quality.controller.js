@@ -17,7 +17,7 @@ const updateController = async (req, res, next) => {
 	try {
 		const reqParams = req.params;
 		const requestBody = req.body;
-		console.log(requestBody);
+		// console.log(requestBody);
 		const result = await qualityService.updateQuality(reqParams, requestBody);
 
 		res.status(201).json({

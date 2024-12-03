@@ -115,7 +115,7 @@ const favouriteController = async (req, res, next) => {
 	try {
 		const barcode = req.params.barcode;
 		const result = await productService.favourite(barcode);
-		console.log(result);
+		// console.log(result);
 		res.status(201).json({
 			error: false,
 			message: `Successfully to ${result.flag} Product ${result.name}`,
@@ -175,7 +175,7 @@ const deletedController = async (req, res, next) => {
 const updateProductController = async (req, res, next) => {
 	try {
 		const barcode = req.params.barcode;
-		console.log(barcode);
+		// console.log(barcode);
 		const request = req.body;
 		const result = await productService.updateProduct(barcode, request);
 		res.status(201).json({
