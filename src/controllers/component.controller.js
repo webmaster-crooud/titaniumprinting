@@ -2,11 +2,25 @@ import componentService from "../services/component.service.js";
 
 const createController = async (req, res, next) => {
 	try {
+		console.log(req.body);
 		const data = await componentService.create(req.body);
+
 		res.status(201).json({
-			error: false,
-			message: "Successfully",
+			message: "Successfully to create new component",
 			data,
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
+const findByIdController = async (req, res, next) => {
+	try {
+		const componentId = req.params.componentId;
+		const result = await componentService.findById(componentId);
+		res.status(200).json({
+			message: `Success to get Component`,
+			data: result,
 		});
 	} catch (error) {
 		next(error);
@@ -32,19 +46,6 @@ const listDisabledController = async (req, res, next) => {
 		res.status(200).json({
 			error: false,
 			message: "Successfully get list components Disabled",
-			data: result,
-		});
-	} catch (error) {
-		next(error);
-	}
-};
-
-const findByIdController = async (req, res, next) => {
-	try {
-		const result = await componentService.findById(req.params.componentId);
-		res.status(200).json({
-			error: false,
-			message: `Success to get ${result.name} Component`,
 			data: result,
 		});
 	} catch (error) {

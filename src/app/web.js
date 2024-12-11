@@ -18,7 +18,7 @@ web.use(
 			`${process.env.APP_BASEURL}:3000`,
 			`${process.env.APP_BASEURL}:5173`,
 		],
-		methods: ["GET", "POST", "PUT", "DELETE"],
+		methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
 		allowedHeaders: [
 			"Content-Type",
 			"Authorization",
