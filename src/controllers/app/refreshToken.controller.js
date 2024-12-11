@@ -7,6 +7,7 @@ dotenv.config();
 export const refreshToken = async (req, res, next) => {
 	try {
 		const refreshToken = req.cookies.refreshToken;
+
 		if (!refreshToken) throw new ResponseError(401, "Unauthorization");
 		const account = await prisma.refreshToken.findFirst({
 			where: {
@@ -30,6 +31,7 @@ export const refreshToken = async (req, res, next) => {
 				},
 			},
 		});
+
 		if (!account) throw new ResponseError(403, "Forbidden");
 		jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN, (err, decoded) => {
 			if (err) throw new ResponseError(403, "Forbidden");

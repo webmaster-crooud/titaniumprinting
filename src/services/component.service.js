@@ -1,47 +1,131 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "../app/database.js";
 import {
 	componentValidation,
-	getComponentValidation,
+	detailComponentValidation,
 } from "../validations/component.validation.js";
 import { validate } from "../validations/validation.js";
 import { ResponseError } from "../errors/Response.error.js";
+import e from "express";
 
 const create = async (request) => {
-	const requestBody = validate(componentValidation, request);
+	request = validate(componentValidation, request);
+	console.log(request);
+	const countComponent = await prisma.component.count({
+		where: {
+			name: request.name,
+		},
+	});
+	if (countComponent !== 0)
+		throw new ResponseError(400, "Component is already exist.");
 
-	return await prisma.$transaction(
-		async (tx) => {
-			const findComponent = await tx.component.findFirst({
-				where: {
-					name: requestBody.name,
+	const result = await prisma.$transaction(async (tx) => {
+		if (!request.qualities) {
+			const createComponent = await tx.component.create({
+				data: {
+					name: request.name,
+					typeComponent: request.typeComponent,
+					pricings: {
+						create: {
+							price: request.price,
+							cogs: request.cogs,
+						},
+					},
 				},
 			});
-			if (findComponent) {
-				return await tx.component.update({
-					data: requestBody,
-					where: {
-						id: findComponent.id,
-					},
-					select: {
-						id: true,
-					},
-				});
-			} else {
-				return await tx.component.create({
-					data: requestBody,
-					select: {
-						id: true,
-					},
-				});
-			}
-		},
-		{
-			isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // optional, default defined by database configuration
-			maxWait: 5000, // default: 2000
-			timeout: 10000, // default: 5000
+
+			return createComponent;
+		} else {
+			const createComponent = await tx.component.create({
+				data: {
+					name: request.name,
+					typeComponent: request.typeComponent,
+				},
+				select: {
+					id: true,
+				},
+			});
+
+			const createQuality = request.qualities.map((quality) => ({
+				componentId: createComponent.id,
+				name: quality.name,
+			}));
+			await tx.quality.createMany({
+				data: createQuality,
+				skipDuplicates: true,
+			});
+
+			return createComponent;
 		}
-	);
+	});
+
+	if (!result) {
+		throw new ResponseError(400, "Oppsss... something wrong!");
+	} else {
+		return result;
+	}
+};
+
+const findById = async (componentId) => {
+	componentId = validate(detailComponentValidation, parseInt(componentId));
+	parseInt(componentId);
+
+	const component = await prisma.component.findUnique({
+		where: {
+			id: componentId,
+		},
+		select: {
+			name: true,
+			typeComponent: true,
+			flag: true,
+			createdAt: true,
+			updatedAt: true,
+			qualities: {
+				where: {
+					component: {
+						flag: "ACTIVED",
+					},
+				},
+				select: {
+					id: true,
+					name: true,
+					flag: true,
+					pricings: {
+						select: {
+							price: true,
+							cogs: true,
+						},
+					},
+				},
+			},
+			pricings: {
+				select: {
+					price: true,
+					cogs: true,
+					sizes: {
+						select: {
+							id: true,
+							height: true,
+							weight: true,
+							length: true,
+							name: true,
+							wide: true,
+							width: true,
+						},
+					},
+				},
+				take: 1,
+				orderBy: {
+					price: "asc",
+				},
+			},
+		},
+	});
+
+	if (!component) {
+		throw new ResponseError(400, "Oppss... something wrong!");
+	} else {
+		return component;
+	}
 };
 
 const list = async () => {
@@ -95,49 +179,6 @@ const listDisabled = async () => {
 			createdAt: "desc",
 		},
 	});
-};
-
-const findById = async (componentId) => {
-	componentId = validate(getComponentValidation, componentId);
-	const component = await prisma.component.findUnique({
-		where: {
-			id: componentId,
-			flag: "ACTIVED",
-		},
-		select: {
-			id: true,
-			name: true,
-			flag: true,
-			price: true,
-			cogs: true,
-			typeComponent: true,
-			createdAt: true,
-			updatedAt: true,
-			canIncrise: true,
-			qualities: {
-				select: {
-					id: true,
-					name: true,
-					flag: true,
-					orientation: true,
-					sizes: {
-						select: {
-							id: true,
-							width: true,
-							height: true,
-							weight: true,
-							price: true,
-							cogs: true,
-							length: true,
-						},
-					},
-				},
-			},
-		},
-	});
-
-	if (!component) throw new ResponseError(404, "Components is not found");
-	return component;
 };
 
 const update = async (componentId, request) => {

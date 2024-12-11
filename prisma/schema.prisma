@@ -1,4 +1,3 @@
-
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -7,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["fullTextIndex"]
 }
 
 datasource db {
@@ -16,22 +14,22 @@ datasource db {
 }
 
 model Category {
-  id Int @id @default(autoincrement())
-  name String @db.VarChar(100)
-  slug String? @db.VarChar(120) @unique
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(100)
+  slug        String? @unique @db.VarChar(120)
   description String? @db.Text
-  flag FLAG @default(ACTIVED)
-  
+  flag        FLAG    @default(ACTIVED)
+
   category_product CategoryProduct[]
-  category_service CategoryService[]
+
   @@map("categories")
 }
 
 model CategoryProduct {
-  barcode String @db.VarChar(100)
-  categoryId Int @db.Int @map("category_id")
+  barcode    String @db.VarChar(100)
+  categoryId Int    @map("category_id") @db.Int
 
-  products Product @relation(fields: [barcode], references: [barcode])
+  products   Product  @relation(fields: [barcode], references: [barcode])
   categories Category @relation(fields: [categoryId], references: [id])
 
   @@id([barcode, categoryId])
@@ -39,76 +37,64 @@ model CategoryProduct {
 }
 
 model Product {
-  barcode String @id @db.VarChar(100) @default(cuid())
-  name String @db.VarChar(150)
-  slug String? @db.VarChar(200) @unique
-  cover String? @db.VarChar(255)
-  description String? @db.Text
-  flag FLAG @default(ACTIVED)
-  totalPrice Decimal @db.Decimal(12,2) @default(0) @map("total_price")
-  totalCogs Decimal @db.Decimal(12, 2) @default(0) @map("total_cost_of_goods_sold")
-  createdAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
-  updatedAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")) @map("updated_at")
+  barcode     String   @id @default(cuid()) @db.VarChar(100)
+  name        String   @db.VarChar(150)
+  slug        String?  @unique @db.VarChar(200)
+  cover       String?  @db.VarChar(255)
+  description String?  @db.Text
+  flag        FLAG     @default(ACTIVED)
+  createdAt   DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamp(0)
+  orientation Boolean  @default(false)
 
   product_component ProductComponent[]
-  product_category CategoryProduct[]
-  service_product ServiceProduct[]
-  images Image[]
+  product_category  CategoryProduct[]
+  service_product   ServiceProduct[]
+  images            Image[]
+
   @@index(map: "idx_name_barcode", fields: [name, barcode])
-  @@fulltext(map: "idx_name_description", fields: [name, description])
   @@map("products")
 }
 
 model Image {
-  id Int @db.Int @default(autoincrement()) @id
-  barcode String @db.VarChar(100) 
-  name String @db.VarChar(100)
-  source String @db.VarChar(100)
+  id      Int    @id @default(autoincrement()) @db.Int
+  barcode String @db.VarChar(100)
+  name    String @db.VarChar(100)
+  source  String @db.VarChar(100)
 
   product Product @relation(fields: [barcode], references: [barcode])
+
   @@map("images")
 }
 
 model ServiceProduct {
-  barcodeService String @db.VarChar(100) @map("barcode_service")
-  barcodeProduct String @db.VarChar(100) @map("barcode_product")
+  barcodeService String @map("barcode_service") @db.VarChar(100)
+  barcodeProduct String @map("barcode_product") @db.VarChar(100)
 
   products Product @relation(fields: [barcodeProduct], references: [barcode])
   services Service @relation(fields: [barcodeService], references: [barcode])
+
   @@id([barcodeProduct, barcodeService])
   @@map("service_product")
 }
 
-model CategoryService {
-  barcode String @db.VarChar(100)
-  categoryId Int @db.Int @map("category_id")
-
-
-  categories Category @relation(fields: [categoryId], references: [id])
-  services Service @relation(fields: [barcode], references: [barcode])
-  @@id([barcode, categoryId])
-  @@map("category_service")
-}
-
 model Service {
   barcode String @id @default(cuid())
-  name String @db.VarChar(100)
-  slug String @db.VarChar(100)
-  flag FLAG @default(ACTIVED)
+  name    String @db.VarChar(100)
+  slug    String @db.VarChar(100)
+  flag    FLAG   @default(ACTIVED)
 
   service_product ServiceProduct[]
-  category_service CategoryService[]
 
   @@map("services")
 }
 
 model ProductComponent {
-  barcode String
-  componentId String @db.VarChar(255) @map("component_id")
-  minQty Int @db.Int @default(1) @map("min_quantity")
-  typePieces String? @db.VarChar(50) @map("type_pieces")
+  barcode     String
+  componentId Int    @map("component_id") @db.Int
+  minQty      Int    @default(1) @map("min_quantity") @db.Int
 
-  products Product @relation(fields: [barcode], references: [barcode])
+  products  Product   @relation(fields: [barcode], references: [barcode])
   component Component @relation(fields: [componentId], references: [id])
 
   @@id([barcode, componentId])
@@ -116,137 +102,194 @@ model ProductComponent {
 }
 
 model Component {
-  id String @id @default(uuid())
-  name String @db.VarChar(100)
-  price Decimal? @db.Decimal(12,2) 
-  cogs Decimal? @db.Decimal(12,2) @map("cost_of_goods_sold")
-  flag FLAG @default(ACTIVED)
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(100)
   typeComponent TYPECOMPONENT? @map("type_component")
-  description String? @db.Text
-  canIncrise Boolean? @default(false) @map("can_incrise")
-  createdAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
-  updatedAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+  flag          FLAG           @default(ACTIVED)
+  createdAt     DateTime       @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime       @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")) @db.Timestamp(0)
 
   ProductComponent ProductComponent[]
-  qualities Quality[]
+  qualities        Quality[]
+  pricings         Pricing[]
+
   @@map("components")
 }
 
 model Quality {
-  id Int @id @default(autoincrement())
-  componentId String @db.VarChar(255)
+  id   Int    @id @default(autoincrement())
   name String @db.VarChar(100)
-  orientation Boolean @default(false)
-  description String? @db.Text
-  flag FLAG @default(ACTIVED)
+  flag FLAG   @default(ACTIVED)
 
-  component Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
-  sizes Size[]
+  pricings    Pricing[]
+  componentId Int       @map("component_id") @db.Int
+  component   Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
   @@map("qualities")
 }
 
 model Size {
-  id Int @id @default(autoincrement())
-  name String? @db.VarChar(100) 
-  qualityId Int @db.Int
-  length Float? @db.Double
-  width Float? @db.Double
-  height Float? @db.Double
-  weight Float? @db.Float
-  price Decimal? @db.Decimal(12,2) 
-  cogs Decimal? @db.Decimal(12,2) @map("cost_of_goods_sold")
+  id        Int    @id @default(autoincrement())
+  name      String @db.VarChar(100)
+  length    Float  @default(1) @db.Double // cm
+  width     Float  @default(1) @db.Double // cm
+  height    Float  @default(1) @db.Double // cm
+  weight    Float  @default(1) @db.Float // gram
+  wide Float  @db.Double
 
-  quality Quality @relation(fields: [qualityId], references: [id], onDelete: Cascade)
+  pricings    Pricing[]
   @@map("sizes")
 }
 
+model Pricing {
+  id Int @id @default(autoincrement())
+
+  componentId Int       @map("component_id") @db.Int
+  components  Component @relation(fields: [componentId], references: [id])
+
+  qualityId Int?     @map("quality_id") @db.Int
+  qualities Quality? @relation(fields: [qualityId], references: [id])
+
+  sizeId Int?  @map("size_id") @db.Int
+  sizes  Size? @relation(fields: [sizeId], references: [id])
+
+  price Decimal?  @db.Decimal(12, 2)
+  cogs  Decimal? @map("cost_of_goods_sold") @db.Decimal(12, 2)
+
+  progressivePricings ProgressivePricing[]
+
+  @@map("pricings")
+}
+
+model ProgressivePricing {
+  id     Int  @id @default(autoincrement()) @db.Int
+  minQty Int  @default(1) @map("min_quantity") @db.Int
+  maxQty Int? @map("max_quantity") @db.Int
+
+  pricingId Int     @map("pricing_id") @db.Int
+  pricing   Pricing @relation(fields: [pricingId], references: [id])
+
+  price Decimal @db.Decimal(12, 2)
+
+  @@map("progressive_pricing")
+}
+
 model Cart {
-  transactionCode String @id @default(cuid()) @map("transaction_code")
-  files String @db.VarChar(100)
-  notes String? @db.VarChar(100)
-  totalPriceComponent Int @db.Int @default(0) @map("total_price_component")
-  totalPrice Decimal @db.Decimal(12,2) @default(0) @map("total_price")
-  totalCogs Decimal @db.Decimal(12,2) @default(0) @map("total_cost_of_goods_sold")
-  totalQty Int @db.Int @default(0) @map("total_quantity")
-  status STATUS_ORDER @default(PENDING)
-  userId String @db.VarChar(100)
-  user User @relation(fields: [userId], references: [id])
+  transactionCode     String       @id @default(cuid()) @map("transaction_code")
+  files               String       @db.VarChar(100)
+  notes               String?      @db.VarChar(100)
+  totalPriceComponent Int          @default(0) @map("total_price_component") @db.Int
+  totalPrice          Decimal      @default(0) @map("total_price") @db.Decimal(12, 2)
+  totalCogs           Decimal      @default(0) @map("total_cost_of_goods_sold") @db.Decimal(12, 2)
+  totalQty            Int          @default(0) @map("total_quantity") @db.Int
+  status              STATUS_ORDER @default(PENDING)
+  userId              String       @db.VarChar(100)
+  user                User         @relation(fields: [userId], references: [id])
 
   delivery Delivery?
+
   @@map("cart")
 }
 
 model Delivery {
-  cartId String @id @default(cuid()) @map("cart_id") @unique
-  courier String @db.VarChar(100)
-  price Decimal @db.Decimal(12,2)
-  resi String? @db.VarChar(100)
+  cartId  String  @id @unique @default(cuid()) @map("cart_id")
+  courier String  @db.VarChar(100)
+  price   Decimal @db.Decimal(12, 2)
+  resi    String? @db.VarChar(100)
 
   cart Cart @relation(fields: [cartId], references: [transactionCode])
 }
 
 model User {
-  id String @id @default(cuid())
-  firstName String @db.VarChar(100) @map("first_name")
-  lastName String? @db.VarChar(100) @map("last_name")
-  phone Int? @db.Int @unique
-  email String @db.VarChar(100) @unique
-  role ROLE @default(MEMBER)
-  addresses Address[]
-  cart Cart[]
-  account Account?
-  emailVerify EmailVerify?
-  refreshToken RefreshToken? 
+  id           String        @id @default(cuid())
+  firstName    String        @map("first_name") @db.VarChar(100)
+  lastName     String?       @map("last_name") @db.VarChar(100)
+  phone        Int?          @unique @db.Int
+  email        String        @unique @db.VarChar(100)
+  role         ROLE          @default(MEMBER)
+  addresses    Address[]
+  cart         Cart[]
+  account      Account?
+  emailVerify  EmailVerify?
+  refreshToken RefreshToken?
+
   @@map("users")
 }
 
-model Account{
-  email String @db.VarChar(100) @unique
-  username String? @db.VarChar(100) @unique
-  password String? @db.VarChar(100)
-  ipAddress String @db.VarChar(100) @map("ip_address") 
-  userAgent String @db.Text @map("user_agent")
-  googleId String? @db.VarChar(100) @map("google_id") @unique
-  status ACCOUNTSTATUS @default(PENDING)
-  user User @relation(fields: [email], references: [email], onDelete: Cascade)
+model Account {
+  email     String        @unique @db.VarChar(100)
+  username  String?       @unique @db.VarChar(100)
+  password  String?       @db.VarChar(100)
+  ipAddress String        @map("ip_address") @db.VarChar(100)
+  userAgent String        @map("user_agent") @db.Text
+  googleId  String?       @unique @map("google_id") @db.VarChar(100)
+  status    ACCOUNTSTATUS @default(PENDING)
+  user      User          @relation(fields: [email], references: [email], onDelete: Cascade)
+
   @@map("accounts")
 }
-
 
 model RefreshToken {
   email     String   @unique
   token     String   @db.Text
-  expiredAt DateTime @db.Timestamp(0) @default(dbgenerated("(CURRENT_TIMESTAMP + INTERVAL 1 DAY)")) @map("expired_at")
-  createdAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
+  expiredAt DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + INTERVAL 1 DAY)")) @map("expired_at") @db.Timestamp(0)
+  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
 
   users User @relation(references: [email], fields: [email])
+
   @@map("refresh_token")
 }
 
 model EmailVerify {
-  email String @db.VarChar(100) @unique
-  token String @db.VarChar(100) @default(uuid())
-  type TYPEVERIFY @default(REGISTER)
-  expiredAt DateTime @db.Timestamp(0) @default(dbgenerated("(CURRENT_TIMESTAMP + INTERVAL 5 MINUTE)")) @map("expired_at")
-  createdAt DateTime @db.Timestamp(0) @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at")
-  user User @relation(fields: [email], references: [email], onDelete: Cascade)
+  email     String     @unique @db.VarChar(100)
+  token     String     @default(uuid()) @db.VarChar(100)
+  type      TYPEVERIFY @default(REGISTER)
+  expiredAt DateTime   @default(dbgenerated("(CURRENT_TIMESTAMP + INTERVAL 5 MINUTE)")) @map("expired_at") @db.Timestamp(0)
+  createdAt DateTime   @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
+  user      User       @relation(fields: [email], references: [email], onDelete: Cascade)
 }
 
-
 model Address {
-  id Int @id @default(autoincrement())
-  userId String @db.VarChar(100)
-  name String @db.VarChar(100)
-  street String @db.VarChar(100)
-  city String @db.VarChar(100)
-  province String @db.VarChar(100) 
-  country String @db.VarChar(100)
-  postalCode Int @db.Int @map("postal_code")
-  building String? @db.VarChar(100)
+  id         Int     @id @default(autoincrement())
+  userId     String  @db.VarChar(100)
+  name       String  @db.VarChar(100)
+  street     String  @db.VarChar(100)
+  city       String  @db.VarChar(100)
+  province   String  @db.VarChar(100)
+  country    String  @db.VarChar(100)
+  postalCode Int     @map("postal_code") @db.Int
+  building   String? @db.VarChar(100)
 
   user User @relation(fields: [userId], references: [id])
 
   @@map("addresses")
+}
+
+model Company {
+  code        String  @id @default("titaniumPrinting")
+  name        String  @db.VarChar(100)
+  logo        String  @db.VarChar(100)
+  description String? @db.Text
+
+  street     String @db.VarChar(100)
+  city       String @db.VarChar(100)
+  province   String @db.VarChar(100)
+  country    String @db.VarChar(100)
+  postalCode Int    @map("postal_code") @db.Int
+
+  @@map("companies")
+}
+
+model Promotion {
+  code        String   @id @unique @default("PROMOTION") @db.VarChar(100)
+  price       Int?     @db.Int
+  percent     Float?   @db.Float
+  banner      String?  @db.VarChar(100)
+  description String?  @db.Text
+  start       DateTime @db.Timestamp(0)
+  end         DateTime @db.Timestamp(0)
+
+  @@map("promotions")
 }
 
 enum ACCOUNTSTATUS {
@@ -292,6 +335,6 @@ enum STATUS_ORDER {
 enum ROLE {
   DEVELOPER
   OWNER
-  ADMIN 
+  ADMIN
   MEMBER
 }

@@ -1,6 +1,6 @@
 import { prisma } from "../app/database.js";
 import { ResponseError } from "../errors/Response.error.js";
-import { getComponentValidation } from "../validations/component.validation.js";
+// import { getComponentValidation } from "../validations/component.validation.js";
 import {
 	getQualityValidation,
 	getSizeValidation,
@@ -12,7 +12,7 @@ import { validate } from "../validations/validation.js";
 
 const create = async (request, componentId) => {
 	const qualities = validate(qualitySizeValidation, request);
-	componentId = validate(getComponentValidation, componentId);
+	// componentId = validate(getComponentValidation, componentId);
 
 	const countQualities = await prisma.quality.count({
 		where: {
@@ -77,7 +77,7 @@ const create = async (request, componentId) => {
 };
 
 const updateQuality = async (reqParams, requestBody) => {
-	const componentId = validate(getComponentValidation, reqParams.componentId);
+	// const componentId = validate(getComponentValidation, reqParams.componentId);
 	const qualityId = validate(getQualityValidation, reqParams.qualityId);
 
 	const componentQuality = await prisma.quality.findUnique({
@@ -109,7 +109,7 @@ const updateQuality = async (reqParams, requestBody) => {
 };
 
 const deletedQuality = async (reqParams) => {
-	const componentId = validate(getComponentValidation, reqParams.componentId);
+	// const componentId = validate(getComponentValidation, reqParams.componentId);
 	const qualityId = validate(getQualityValidation, reqParams.qualityId);
 
 	const componentQuality = await prisma.quality.findUnique({
