@@ -15,6 +15,8 @@ import qualityController from "../controllers/quality.controller.js";
 import serviceController from "../controllers/service.controller.js";
 import upload from "../middlewares/multer.middleware.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
+import sizeController from "../controllers/size.controller.js";
+import pricingController from "../controllers/pricing.controller.js";
 
 export const apiRouter = express.Router();
 
@@ -204,7 +206,29 @@ apiRouter.delete(
 	qualityController.deletedController
 );
 
+// API Pricings
+apiRouter.post(
+	"/pricings",
+	verifyToken,
+	pricingController.addPricingQualityController
+);
+
 // API Sizes
+apiRouter.post(
+	"/sizes/pricings",
+	verifyToken,
+	pricingController.addPricingSizeController
+);
+apiRouter.post("/sizes", verifyToken, sizeController.createController);
+apiRouter.get("/sizes", verifyToken, sizeController.listController);
+apiRouter.get("/sizes/:sizeId", verifyToken, sizeController.detailController);
+apiRouter.put("/sizes/:sizeId", verifyToken, sizeController.updateController);
+apiRouter.get(
+	"/sizes/quality/:qualityId",
+	verifyToken,
+	pricingController.getSizeFromQualityController
+);
+
 apiRouter.put(
 	"/components/sizes/:qualityId/:sizeId",
 	verifyToken,

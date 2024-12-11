@@ -1,70 +1,119 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import { oauth2Client } from "../libs/generateToken.js";
+import fs from "fs";
+import { OAuth2Client } from "google-auth-library";
 import { ResponseError } from "../errors/Response.error.js";
 
 dotenv.config();
 
 class EmailService {
 	constructor() {
+		// Inisialisasi OAuth2 Client
+		this.oauth2Client = new OAuth2Client(
+			process.env.CLIENT_ID,
+			process.env.CLIENT_SECRET,
+			process.env.REDIRECT_URL
+		);
+
 		this.initializeOauthClient();
 	}
 
 	initializeOauthClient() {
-		oauth2Client.setCredentials({
+		// Set kredensial awal dengan refresh token dari environment
+		this.oauth2Client.setCredentials({
 			refresh_token: process.env.REFRESH_TOKEN,
 		});
 	}
 
 	async getAccessToken() {
 		try {
-			const accessToken = await oauth2Client.getAccessToken();
+			// Coba dapatkan access token
+			const { token } = await this.oauth2Client.getAccessToken();
 
-			// Jika access token tidak tersedia, regenerasi
-			if (!accessToken.token) {
-				await this.regenerateAccessToken();
-				return await oauth2Client.getAccessToken();
+			if (!token) {
+				// Jika token tidak tersedia, refresh token
+				await this.refreshAccessToken();
+				const newToken = await this.oauth2Client.getAccessToken();
+				return newToken.token;
 			}
 
-			return accessToken.token;
+			return token;
 		} catch (error) {
 			console.error("Error getting access token:", error);
-			await this.regenerateAccessToken();
-			return await oauth2Client.getAccessToken();
+
+			// Jika error, coba refresh token
+			await this.refreshAccessToken();
+			const newToken = await this.oauth2Client.getAccessToken();
+			return newToken.token;
 		}
 	}
 
-	async regenerateAccessToken() {
+	async refreshAccessToken() {
 		try {
-			// Implementasikan logika untuk mendapatkan refresh token baru
-			// Ini bisa melibatkan proses interaktif atau menggunakan API Google
-			const newCredentials = await this.requestNewCredentials();
+			// Dapatkan kredensial baru
+			const { credentials } = await this.oauth2Client.refreshAccessToken();
 
-			oauth2Client.setCredentials({
-				refresh_token: newCredentials.refreshToken,
-			});
+			// Update kredensial di OAuth client
+			this.oauth2Client.setCredentials(credentials);
 
-			// Update refresh token di environment atau database
-			process.env.REFRESH_TOKEN = newCredentials.refreshToken;
+			// Update refresh token di environment jika berubah
+			if (credentials.refresh_token) {
+				await this.updateEnvironmentRefreshToken(credentials.refresh_token);
+			}
 
-			// Simpan refresh token baru (opsional: gunakan metode penyimpanan yang aman)
-			await this.saveRefreshToken(newCredentials.refreshToken);
+			console.log("Token berhasil diperbarui");
 		} catch (error) {
-			console.error("Gagal mendapatkan refresh token baru:", error);
-			throw new ResponseError(500, "Gagal mendapatkan kredensial baru");
+			console.error("Gagal refresh token:", error);
+
+			// Jika refresh token sudah tidak valid
+			if (error.response && error.response.status === 400) {
+				// Generate URL untuk otorisasi ulang
+				const scopes = [
+					"https://mail.google.com/",
+					"https://www.googleapis.com/auth/gmail.send",
+				];
+
+				const url = this.oauth2Client.generateAuthUrl({
+					access_type: "offline",
+					scope: scopes,
+					prompt: "consent",
+				});
+
+				console.error(
+					"Refresh token tidak valid. Silakan buka URL untuk otorisasi ulang:"
+				);
+				console.error(url);
+
+				throw new ResponseError(
+					500,
+					"Perlu otorisasi ulang. Buka URL yang diberikan."
+				);
+			}
+
+			throw error;
 		}
 	}
 
-	async requestNewCredentials() {
-		// PENTING: Implementasi aktual tergantung pada alur otorisasi Anda
-		// Contoh sederhana, Anda perlu menggantinya dengan logika regenerasi yang sesuai
-		throw new Error("Implementasi requestNewCredentials harus disesuaikan");
-	}
+	async updateEnvironmentRefreshToken(newRefreshToken) {
+		try {
+			// Baca file .env
+			const envFile = ".env";
+			const envContents = fs.readFileSync(envFile, "utf8");
 
-	async saveRefreshToken(refreshToken) {
-		// Implementasi penyimpanan refresh token
-		// Contoh: menyimpan ke file, database, atau layanan penyimpanan rahasia
-		console.log("Menyimpan refresh token baru");
+			// Ganti refresh token
+			const updatedEnv = envContents.replace(
+				/REFRESH_TOKEN=.*/,
+				`REFRESH_TOKEN="${newRefreshToken}"`
+			);
+
+			// Tulis ulang file .env
+			fs.writeFileSync(envFile, updatedEnv);
+
+			// Update environment variable saat ini
+			process.env.REFRESH_TOKEN = newRefreshToken;
+		} catch (error) {
+			console.error("Gagal update refresh token di environment:", error);
+		}
 	}
 
 	async createTransporter() {
