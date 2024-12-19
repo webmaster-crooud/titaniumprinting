@@ -26,8 +26,6 @@ const list = async () => {
 		select: {
 			barcode: true,
 			name: true,
-			totalCogs: true,
-			totalPrice: true,
 			product_category: {
 				select: {
 					categories: {
@@ -65,11 +63,18 @@ const listDisabled = async () => {
 		select: {
 			barcode: true,
 			name: true,
-			totalCogs: true,
-			totalPrice: true,
 			product_category: {
 				select: {
 					categories: {
+						select: {
+							name: true,
+						},
+					},
+				},
+			},
+			service_product: {
+				select: {
+					services: {
 						select: {
 							name: true,
 						},
@@ -135,7 +140,7 @@ const create = async (request) => {
 			const categoryProduct = await tx.categoryProduct.createMany({
 				data: (request.categoryProduct || []).map((category) => ({
 					barcode: product.barcode,
-					categoryId: category.categoryId,
+					categoryId: parseInt(category.categoryId),
 				})),
 				skipDuplicates: true,
 			});
@@ -149,9 +154,8 @@ const create = async (request) => {
 			const productComponent = await tx.productComponent.createMany({
 				data: (request.productComponent || []).map((component) => ({
 					barcode: product.barcode,
-					componentId: component.componentId,
+					componentId: parseInt(component.componentId),
 					minQty: component.minQty,
-					typePieces: component.typePieces,
 				})),
 				skipDuplicates: true,
 			});
@@ -191,7 +195,6 @@ const findByBarcode = async (barcode) => {
 			slug: true,
 			description: true,
 			cover: true,
-
 			images: {
 				select: {
 					id: true,
@@ -209,6 +212,7 @@ const findByBarcode = async (barcode) => {
 					},
 				},
 			},
+
 			product_component: {
 				where: {
 					component: {
@@ -217,15 +221,12 @@ const findByBarcode = async (barcode) => {
 				},
 				select: {
 					minQty: true,
-					typePieces: true,
 					component: {
 						select: {
 							id: true,
 							name: true,
 							price: true,
 							cogs: true,
-							canIncrise: true,
-							description: true,
 							typeComponent: true,
 						},
 					},
@@ -241,8 +242,6 @@ const findByBarcode = async (barcode) => {
 					},
 				},
 			},
-			totalCogs: true,
-			totalPrice: true,
 			flag: true,
 			createdAt: true,
 			updatedAt: true,
@@ -512,7 +511,7 @@ const updateCategoryProduct = async (params, request) => {
 
 	if (
 		productCategory.barcode === barcode &&
-		productCategory.categoryId === request.categoryId
+		productparseInt(Category.categoryId) === request.categoryId
 	) {
 		throw new ResponseError(400, "Nothing changes");
 	}

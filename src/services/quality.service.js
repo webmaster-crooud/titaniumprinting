@@ -1,6 +1,5 @@
 import { prisma } from "../app/database.js";
 import { ResponseError } from "../errors/Response.error.js";
-// import { getComponentValidation } from "../validations/component.validation.js";
 import {
 	getQualityValidation,
 	getSizeValidation,
@@ -11,65 +10,47 @@ import {
 import { validate } from "../validations/validation.js";
 
 const create = async (request, componentId) => {
-	const qualities = validate(qualitySizeValidation, request);
-	// componentId = validate(getComponentValidation, componentId);
+	if (!request.price) {
+		console.log("SIZE");
+		validate(qualitySizeValidation, request);
+	} else {
+		console.log("PRICE");
+		validate(qualityValidation, request);
+	}
 
 	const countQualities = await prisma.quality.count({
 		where: {
 			componentId: componentId,
-			name: qualities.name,
+			name: request.name,
+			flag: "ACTIVED",
 		},
 	});
 
 	if (countQualities >= 1)
-		throw new ResponseError(
-			400,
-			`Quality with this ${request.name} is already exists.`
-		);
+		throw new ResponseError(400, `Quality ${request.name} is already exists.`);
 
 	const result = await prisma.$transaction(async (tx) => {
-		return await tx.quality.create({
+		const createQuality = await tx.quality.create({
 			data: {
 				componentId: componentId,
 				name: request.name,
-				orientation: request.orientation,
-				description: request.description,
-				sizes: {
-					createMany: {
-						data: (request.sizes || []).map((size) => ({
-							qualityId: qualities.id,
-							...size,
-						})),
-						skipDuplicates: true,
-					},
-				},
-			},
-			select: {
-				id: true,
-				componentId: true,
-				orientation: true,
-				component: {
-					select: {
-						id: true,
-						name: true,
-						canIncrise: true,
-					},
-				},
-				sizes: {
-					select: {
-						qualityId: true,
-						name: true,
-						id: true,
-						width: true,
-						height: true,
-						weight: true,
-						price: true,
-						cogs: true,
-						length: true,
-					},
-				},
+				price: request.price,
+				cogs: request.cogs,
 			},
 		});
+
+		const dataQualitiesSize = request.qualitiesSize.map((data) => ({
+			qualityId: createQuality.id,
+			sizeId: data.sizeId,
+			price: data.price,
+			cogs: data.cogs,
+		}));
+		await tx.qualitySize.createMany({
+			data: dataQualitiesSize,
+			skipDuplicates: true,
+		});
+
+		return createQuality;
 	});
 
 	if (!result) throw new ResponseError(400, "Opsss... something wrong!");
@@ -108,39 +89,26 @@ const updateQuality = async (reqParams, requestBody) => {
 	});
 };
 
-const deletedQuality = async (reqParams) => {
-	// const componentId = validate(getComponentValidation, reqParams.componentId);
-	const qualityId = validate(getQualityValidation, reqParams.qualityId);
-
+const deletedQuality = async (componentId, qualityId) => {
 	const componentQuality = await prisma.quality.findUnique({
 		where: {
 			id: qualityId,
 			componentId: componentId,
 			flag: "ACTIVED",
 		},
-		select: {
-			id: true,
-			componentId: true,
-			flag: true,
-		},
 	});
 
 	if (!componentQuality) throw new ResponseError(404, "Qualitiy is not found");
 
 	return await prisma.$transaction([
-		prisma.size.deleteMany({
-			where: {
-				qualityId: componentQuality.id,
-			},
-		}),
-		prisma.quality.delete({
+		prisma.quality.update({
 			where: {
 				id: componentQuality.id,
 				componentId: componentQuality.componentId,
-				flag: componentQuality.flag,
+				flag: "ACTIVED",
 			},
-			select: {
-				id: true,
+			data: {
+				flag: "DISABLED",
 			},
 		}),
 	]);

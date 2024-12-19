@@ -17,6 +17,8 @@ import upload from "../middlewares/multer.middleware.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
 import sizeController from "../controllers/size.controller.js";
 import pricingController from "../controllers/pricing.controller.js";
+import promotionController from "../controllers/promotion.controller.js";
+import companyController from "../controllers/company.controller.js";
 
 export const apiRouter = express.Router();
 
@@ -191,56 +193,74 @@ apiRouter.delete(
 
 // API Qualities
 apiRouter.post(
-	"/components/qualities/:componentId",
+	"/qualities/:componentId",
 	verifyToken,
 	qualityController.createController
 );
+apiRouter.delete(
+	"/qualities/:componentId/:qualityId",
+	verifyToken,
+	qualityController.deletedController
+);
+
 apiRouter.put(
 	"/components/qualities/:componentId/:qualityId",
 	verifyToken,
 	qualityController.updateController
 );
-apiRouter.delete(
-	"/components/qualities/:componentId/:qualityId",
-	verifyToken,
-	qualityController.deletedController
-);
 
 // API Pricings
-apiRouter.post(
-	"/pricings",
+apiRouter.post("/pricings", verifyToken, pricingController.createController);
+apiRouter.get(
+	"/pricings/:entityId/:entityType",
 	verifyToken,
-	pricingController.addPricingQualityController
+	pricingController.listController
+);
+apiRouter.delete(
+	"/pricings/:id",
+	verifyToken,
+	pricingController.deletedController
 );
 
 // API Sizes
-apiRouter.post(
-	"/sizes/pricings",
-	verifyToken,
-	pricingController.addPricingSizeController
-);
+// apiRouter.post(
+// 	"/sizes/pricings",
+// 	verifyToken,
+// 	pricingController.addPricingSizeController
+// );
 apiRouter.post("/sizes", verifyToken, sizeController.createController);
 apiRouter.get("/sizes", verifyToken, sizeController.listController);
-apiRouter.get("/sizes/:sizeId", verifyToken, sizeController.detailController);
-apiRouter.put("/sizes/:sizeId", verifyToken, sizeController.updateController);
-apiRouter.get(
-	"/sizes/quality/:qualityId",
+apiRouter.post(
+	"/sizes/quality",
 	verifyToken,
-	pricingController.getSizeFromQualityController
-);
-
-apiRouter.put(
-	"/components/sizes/:qualityId/:sizeId",
-	verifyToken,
-	qualityController.updateSizeController
+	sizeController.addToQualityController
 );
 apiRouter.delete(
-	"/components/sizes/:qualityId/:sizeId",
+	"/sizes/quality/:qualitySizeId",
 	verifyToken,
-	qualityController.deletedSizeController
+	sizeController.deletedOnQualityController
 );
+apiRouter.get("/sizes/:sizeId", verifyToken, sizeController.detailController);
+apiRouter.put("/sizes/:sizeId", verifyToken, sizeController.updateController);
+// apiRouter.get(
+// 	"/sizes/quality/:qualityId",
+// 	verifyToken,
+// 	pricingController.getSizeFromQualityController
+// );
+
+// apiRouter.put(
+// 	"/components/sizes/:qualityId/:sizeId",
+// 	verifyToken,
+// 	qualityController.updateSizeController
+// );
+// apiRouter.delete(
+// 	"/components/sizes/:qualityId/:sizeId",
+// 	verifyToken,
+// 	qualityController.deletedSizeController
+// );
 
 // API Services
+
 apiRouter.get("/services", verifyToken, serviceController.listController);
 apiRouter.get(
 	"/services/disabled",
@@ -277,4 +297,31 @@ apiRouter.patch(
 	"/services/:barcode/favourite",
 	verifyToken,
 	serviceController.favouriteController
+);
+
+// Promotion
+apiRouter.get("/promotions", promotionController.listController);
+apiRouter.post("/promotions", promotionController.createController);
+apiRouter.put("/promotions/:code", promotionController.updateController);
+apiRouter.delete("/promotions/:code", promotionController.deletedController);
+
+// Company
+apiRouter.get("/companies/:code", verifyToken, companyController.getController);
+apiRouter.put("/companies/:code", verifyToken, companyController.updateController);
+apiRouter.post(
+	"/companies/:code/social-media",
+	verifyToken,
+	companyController.addSocialMediaController
+);
+
+apiRouter.put(
+	"/companies/:id/social-media",
+	verifyToken,
+	companyController.updateSocialMediaController
+);
+
+apiRouter.delete(
+	"/companies/:id/social-media",
+	verifyToken,
+	companyController.deletedSocialMediaController
 );
