@@ -19,7 +19,7 @@ const create = async (request) => {
 	if (countService) throw new ResponseError(400, `${request.name} is exist`);
 
 	const result = await prisma.$transaction(async (tx) => {
-		const service = await prisma.service.create({
+		return await prisma.service.create({
 			data: {
 				name: request.name,
 				slug: slug(request.name),
@@ -29,16 +29,6 @@ const create = async (request) => {
 				name: true,
 			},
 		});
-
-		const categoryService = await prisma.categoryService.createMany({
-			data: (request.categoryService || []).map((category) => ({
-				barcode: service.barcode,
-				categoryId: category.categoryId,
-			})),
-			skipDuplicates: true,
-		});
-
-		return { service, categoryService };
 	});
 
 	if (!result) throw new ResponseError(400, "Opss... something wrong!");
@@ -55,24 +45,12 @@ const detail = async (barcode) => {
 		select: {
 			barcode: true,
 			name: true,
-			category_service: {
-				select: {
-					categories: {
-						select: {
-							id: true,
-							name: true,
-						},
-					},
-				},
-			},
 			service_product: {
 				select: {
 					products: {
 						select: {
 							name: true,
 							description: true,
-							totalPrice: true,
-							totalCogs: true,
 						},
 					},
 				},
@@ -121,7 +99,7 @@ const update = async (barcode, request) => {
 	}
 
 	const result = await prisma.$transaction(async (tx) => {
-		const service = await prisma.service.update({
+		return await prisma.service.update({
 			data: {
 				name: request.name,
 			},
@@ -133,16 +111,6 @@ const update = async (barcode, request) => {
 				name: true,
 			},
 		});
-
-		const categoryService = await prisma.categoryService.createMany({
-			data: (request.categoryService || []).map((category) => ({
-				barcode: service.barcode,
-				categoryId: category.categoryId,
-			})),
-			skipDuplicates: true,
-		});
-
-		return { service, categoryService };
 	});
 
 	if (!result) throw new ResponseError(400, "Opss... something wrong!");

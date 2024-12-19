@@ -1,3 +1,4 @@
+import { ResponseError } from "../errors/Response.error.js";
 import sizeService from "../services/size.service.js";
 
 const createController = async (req, res, next) => {
@@ -52,9 +53,37 @@ const updateController = async (req, res, next) => {
 	}
 };
 
+const addToQualityController = async (req, res, next) => {
+	const request = req.body;
+	try {
+		await sizeService.addToQuality(request);
+		res.status(201).json({
+			message: "OK",
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
+const deletedOnQualityController = async (req, res, next) => {
+	const { qualitySizeId } = req.params;
+	if (!qualitySizeId) throw new ResponseError(404, "Data is not found!");
+
+	try {
+		await sizeService.deletedOnQuality(parseInt(qualitySizeId));
+		res.status(201).json({
+			message: "Successfully deleted Size on Quality",
+		});
+	} catch (error) {
+		next(error);
+	}
+};
+
 export default {
 	createController,
 	listController,
 	updateController,
 	detailController,
+	addToQualityController,
+	deletedOnQualityController,
 };

@@ -1,113 +1,84 @@
+import { validate } from "../validations/validation.js";
+import { addPricing } from "../validations/pricing.validation.js";
 import { prisma } from "../app/database.js";
 import { ResponseError } from "../errors/Response.error.js";
-import {
-	addPricing,
-	pricingValidation,
-} from "../validations/pricing.validation.js";
-import { validate } from "../validations/validation.js";
 
-const addPricingQuality = async (request) => {
-	request = validate(pricingValidation, request);
-	return await prisma.$transaction(async (tx) => {
-		const find = await tx.pricing.findFirst({
-			where: {
-				componentId: request.componentId,
-				qualityId: request.qualityId,
-				sizeId: request.sizeId,
-			},
-		});
-
-		if (find) {
-			return await tx.pricing.update({
-				where: {
-					id: find.id,
-				},
-				data: {
-					price: request.price,
-					cogs: request.cogs,
-				},
-			});
-		} else {
-			return await tx.pricing.create({
-				data: {
-					price: request.price,
-					cogs: request.cogs,
-					components: {
-						connect: {
-							id: request.componentId,
-						},
-					},
-					qualities: {
-						connect: {
-							id: request.qualityId,
-						},
-					},
-					sizes: {
-						connect: {
-							id: request.sizeId,
-						},
-					},
-				},
-			});
-		}
-	});
-};
-
-const addPricingSize = async (request) => {
+const create = async (request) => {
 	request = validate(addPricing, request);
-	const findQuality = await prisma.pricing.findFirst({
-		where: {
-			componentId: request[0].componentId,
-			qualityId: request[0].qualityId,
-		},
-	});
-	if (findQuality) {
-		await prisma.pricing.delete({
-			where: {
-				id: findQuality.id,
+
+	for (const data of request) {
+		let entityExists;
+		switch (data.entityType) {
+			case "qualitySize":
+				entityExists = await prisma.qualitySize.findUnique({
+					where: { id: data.entityId },
+				});
+				break;
+			case "component":
+				entityExists = await prisma.component.findUnique({
+					where: { id: data.entityId },
+				});
+				break;
+			case "quality":
+				entityExists = await prisma.quality.findUnique({
+					where: { id: data.entityId },
+				});
+				break;
+			default:
+				throw new ResponseError(400, `Invalid entityType: ${data.entityType}`);
+		}
+
+		if (!entityExists) {
+			throw new ResponseError(
+				404,
+				`${data.entityType} with id ${data.entityId} does not exist.`
+			);
+		}
+
+		await prisma.progressivePricing.create({
+			data: {
+				entityType: data.entityType,
+				entityId: data.entityId,
+				minQty: data.minQty,
+				maxQty: data.maxQty,
+				price: data.price,
 			},
 		});
 	}
-	const createSizePricing = request.map((size) => ({
-		componentId: size.componentId,
-		qualityId: size.qualityId,
-		sizeId: size.sizeId,
-		price: size.price,
-		cogs: size.cogs,
-	}));
-	return await prisma.pricing.createMany({
-		data: createSizePricing,
-		skipDuplicates: true,
+};
+
+const deleted = async (id) => {
+	const find = prisma.progressivePricing.findUnique({
+		where: {
+			id: id,
+		},
+	});
+	if (!find) throw new ResponseError(404, "Progressive Pricing is not found!");
+	await prisma.progressivePricing.delete({
+		where: {
+			id: id,
+		},
 	});
 };
 
-const getSizeFromQuality = async (qualityId) => {
-	console.log(qualityId);
-	const size = await prisma.size.findMany({
+const list = async (entityId, entityType) => {
+	return await prisma.progressivePricing.findMany({
 		where: {
-			pricings: {
-				some: {
-					qualityId: qualityId,
-				},
-			},
+			entityId: entityId,
+			entityType: entityType,
 		},
 		select: {
-			name: true,
-			pricings: {
-				select: {
-					price: true,
-					cogs: true,
-				},
-			},
+			id: true,
+			entityId: true,
+			entityType: true,
+			minQty: true,
+			maxQty: true,
+			price: true,
+		},
+		orderBy: {
+			minQty: "asc",
 		},
 	});
-	console.log(size);
-
-	if (size.length === 0) {
-		throw new ResponseError(404, "Size is not found");
-	} else {
-		return size;
-	}
 };
 
-export default { addPricingQuality, addPricingSize, getSizeFromQuality };
+export default { create, list, deleted };
