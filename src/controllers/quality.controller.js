@@ -1,12 +1,13 @@
+import { ResponseError } from "../errors/Response.error.js";
 import qualityService from "../services/quality.service.js";
 
 const createController = async (req, res, next) => {
+	const { componentId } = req.params;
+	if (!componentId) throw new ResponseError(400, "Component ID is not defined");
 	try {
-		const data = await qualityService.create(req.body, req.params.componentId);
+		await qualityService.create(req.body, parseInt(req.params.componentId));
 		res.status(201).json({
-			error: false,
-			message: "OK",
-			data,
+			message: "Successfully to create new qualities",
 		});
 	} catch (error) {
 		next(error);
@@ -30,12 +31,18 @@ const updateController = async (req, res, next) => {
 };
 
 const deletedController = async (req, res, next) => {
+	const { componentId, qualityId } = req.params;
+	console.log(componentId);
+	console.log(qualityId);
 	try {
-		const reqParams = req.params;
-		await qualityService.deletedQuality(reqParams);
+		if (!componentId && !qualityId) throw new ResponseError(400, "Bad Request");
+		await qualityService.deletedQuality(
+			parseInt(componentId),
+			parseInt(qualityId)
+		);
 		res.status(201).json({
 			error: false,
-			message: `Successfully to deleted quality and size data`,
+			message: `Successfully to deleted quality`,
 		});
 	} catch (error) {
 		next(error);

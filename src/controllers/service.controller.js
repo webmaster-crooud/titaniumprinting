@@ -32,7 +32,7 @@ const updateController = async (req, res, next) => {
 		const result = await serviceService.update(barcode, request);
 		res.status(201).json({
 			error: false,
-			message: `Successfully to updated ${result.service.name} service's`,
+			message: `Successfully to updated ${result.name} service's`,
 		});
 	} catch (error) {
 		next(error);

@@ -14,3 +14,10 @@ export const sizeValidation = Joi.object({
 export const createSizeValidation = Joi.array().items(sizeValidation);
 
 export const getSizeValidation = Joi.number().required();
+
+export const addToQualityValidation = Joi.array().items({
+	qualityId: Joi.number().required(),
+	sizeId: Joi.number().required(),
+	price: Joi.number().required(),
+	cogs: Joi.number().required(),
+});

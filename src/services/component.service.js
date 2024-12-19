@@ -9,10 +9,10 @@ import e from "express";
 
 const create = async (request) => {
 	request = validate(componentValidation, request);
-	console.log(request);
 	const countComponent = await prisma.component.count({
 		where: {
 			name: request.name,
+			flag: "ACTIVED",
 		},
 	});
 	if (countComponent !== 0)
@@ -24,12 +24,8 @@ const create = async (request) => {
 				data: {
 					name: request.name,
 					typeComponent: request.typeComponent,
-					pricings: {
-						create: {
-							price: request.price,
-							cogs: request.cogs,
-						},
-					},
+					price: request.price,
+					cogs: request.cogs,
 				},
 			});
 
@@ -48,6 +44,8 @@ const create = async (request) => {
 			const createQuality = request.qualities.map((quality) => ({
 				componentId: createComponent.id,
 				name: quality.name,
+				price: quality.price,
+				cogs: quality.cogs,
 			}));
 			await tx.quality.createMany({
 				data: createQuality,
@@ -72,52 +70,43 @@ const findById = async (componentId) => {
 	const component = await prisma.component.findUnique({
 		where: {
 			id: componentId,
+			flag: "ACTIVED",
 		},
 		select: {
 			name: true,
 			typeComponent: true,
 			flag: true,
-			createdAt: true,
-			updatedAt: true,
+			price: true,
+			cogs: true,
 			qualities: {
 				where: {
-					component: {
-						flag: "ACTIVED",
-					},
+					flag: "ACTIVED",
 				},
 				select: {
 					id: true,
 					name: true,
 					flag: true,
-					pricings: {
+					cogs: true,
+					price: true,
+					qualitiesSize: {
 						select: {
+							id: true,
+							sizes: {
+								select: {
+									name: true,
+								},
+							},
 							price: true,
 							cogs: true,
 						},
-					},
-				},
-			},
-			pricings: {
-				select: {
-					price: true,
-					cogs: true,
-					sizes: {
-						select: {
-							id: true,
-							height: true,
-							weight: true,
-							length: true,
-							name: true,
-							wide: true,
-							width: true,
+						orderBy: {
+							price: "asc",
 						},
 					},
 				},
-				take: 1,
-				orderBy: {
-					price: "asc",
-				},
 			},
+			createdAt: true,
+			updatedAt: true,
 		},
 	});
 
@@ -247,52 +236,25 @@ const disabled = async (componentId) => {
 };
 
 const deleted = async (componentId) => {
-	componentId = validate(getComponentValidation, componentId);
-	const component = await prisma.component.findUnique({
+	const component = await prisma.component.findFirst({
 		where: {
 			id: componentId,
-			flag: "DISABLED",
+			flag: "ACTIVED",
 		},
 		select: {
 			id: true,
 		},
 	});
-	if (!component)
-		throw new ResponseError(400, "Components is not require to deleted");
+	if (!component) throw new ResponseError(404, "Components is not found!");
 
-	return await prisma.$transaction(async (tx) => {
-		const quality = await tx.quality.findMany({
-			where: {
-				componentId: componentId,
-			},
-		});
-
-		// Deleted sizes with quality ID
-		await Promise.all(
-			quality.map(async (data) => {
-				const sizes = await tx.size.deleteMany({
-					where: { qualityId: data.id },
-				});
-				return sizes;
-			})
-		);
-
-		// Deleted Quality with Compoenet id
-		await tx.quality.deleteMany({
-			where: {
-				componentId: component.id,
-			},
-		});
-
-		// Deleted Component
-		await tx.component.delete({
-			where: {
-				id: component.id,
-			},
-			select: {
-				id: true,
-			},
-		});
+	return await prisma.component.update({
+		where: {
+			id: componentId,
+			flag: "ACTIVED",
+		},
+		data: {
+			flag: "DISABLED",
+		},
 	});
 };
 

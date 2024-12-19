@@ -1,6 +1,7 @@
 import { prisma } from "../app/database.js";
 import { ResponseError } from "../errors/Response.error.js";
 import {
+	addToQualityValidation,
 	createSizeValidation,
 	getSizeValidation,
 	sizeValidation,
@@ -104,4 +105,93 @@ const update = async (sizeId, request) => {
 	});
 };
 
-export default { create, list, update, detail };
+const deleted = async (sizeId, request) => {
+	sizeId = validate(getSizeValidation, sizeId);
+	const findSize = await prisma.size.findUnique({
+		where: {
+			id: sizeId,
+		},
+		select: {
+			id: true,
+			name: true,
+		},
+	});
+
+	const data = validate(sizeValidation, request);
+
+	if (!findSize) {
+		throw new ResponseError(404, "Size is not found!");
+	}
+
+	return await prisma.size.update({
+		where: {
+			id: findSize.id,
+		},
+		data: {
+			wide: data.width * data.length,
+			width: data.width,
+			height: data.height,
+			weight: data.weight,
+			length: data.length,
+			name: data.name,
+		},
+		select: {
+			id: true,
+			name: true,
+		},
+	});
+};
+
+const addToQuality = async (request) => {
+	request = validate(addToQualityValidation, request);
+
+	const createQualitySize = request.map((req) => ({
+		qualityId: req.qualityId,
+		sizeId: req.sizeId,
+		price: req.price,
+		cogs: req.cogs,
+	}));
+	await prisma.qualitySize.createMany({
+		data: createQualitySize,
+		skipDuplicates: true,
+	});
+};
+
+const deletedOnQuality = async (id) => {
+	const find = await prisma.qualitySize.findFirst({
+		where: {
+			id: id,
+		},
+		select: {
+			id: true,
+			qualityId: true,
+			sizeId: true,
+		},
+	});
+
+	if (!find) throw new ResponseError(404, "Data is not found!");
+
+	await prisma.progressivePricing.deleteMany({
+		where: {
+			OR: [
+				{
+					entityId: find.qualityId,
+					entityType: "quality",
+				},
+				{
+					entityId: find.id,
+					entityType: "qualitySize",
+				},
+			],
+		},
+	});
+
+	await prisma.qualitySize.deleteMany({
+		where: {
+			qualityId: find.qualityId,
+			sizeId: find.sizeId,
+		},
+	});
+};
+
+export default { create, list, update, detail, addToQuality, deletedOnQuality };

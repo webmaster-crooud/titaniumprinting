@@ -1,11 +1,11 @@
 import Joi from "joi";
 
 export const pricingValidation = Joi.object({
-	componentId: Joi.number().required(),
-	qualityId: Joi.number().optional(),
-	sizeId: Joi.number().optional(),
-	price: Joi.number().required().min(1),
-	cogs: Joi.number().required().min(1),
+	entityType: Joi.string().required(),
+	entityId: Joi.number().required(),
+	minQty: Joi.number().required(),
+	maxQty: Joi.number().optional(),
+	price: Joi.number().required(),
 });
 
 export const addPricing = Joi.array().items(pricingValidation);

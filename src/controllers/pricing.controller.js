@@ -1,11 +1,10 @@
 import { ResponseError } from "../errors/Response.error.js";
 import pricingService from "../services/pricing.service.js";
 
-const addPricingQualityController = async (req, res, next) => {
+const createController = async (req, res, next) => {
 	const request = req.body;
-	console.log(request);
 	try {
-		await pricingService.addPricingQuality(request);
+		await pricingService.create(request);
 		res.status(200).json({
 			message: "OK",
 		});
@@ -14,27 +13,14 @@ const addPricingQualityController = async (req, res, next) => {
 	}
 };
 
-const addPricingSizeController = async (req, res, next) => {
-	const request = req.body;
-	console.log(request);
+const listController = async (req, res, next) => {
+	const { entityType, entityId } = req.params;
+	if (!entityId) throw new ResponseError(400, "Entity ID is not defined");
+	if (!entityType) throw new ResponseError(400, "Entity ID is not defined");
 	try {
-		await pricingService.addPricingSize(request);
+		const result = await pricingService.list(parseInt(entityId), entityType);
 		res.status(200).json({
-			message: "OK",
-		});
-	} catch (error) {
-		next(error);
-	}
-};
-
-const getSizeFromQualityController = async (req, res, next) => {
-	const { qualityId } = req.params;
-	console.log(qualityId);
-	if (!qualityId) throw new ResponseError(400, "Quality ID is not defined");
-	try {
-		const result = await pricingService.getSizeFromQuality(parseInt(qualityId));
-		res.status(200).json({
-			message: "OK",
+			message: "ok",
 			data: result,
 		});
 	} catch (error) {
@@ -42,8 +28,20 @@ const getSizeFromQualityController = async (req, res, next) => {
 	}
 };
 
+const deletedController = async (req, res, next) => {
+	const { id } = req.params;
+	if (!id) throw new ResponseError(400, "Id is not defined");
+	try {
+		await pricingService.deleted(parseInt(id));
+		res.status(201).json({
+			message: "Successfully deleted progressive pricing",
+		});
+	} catch (error) {
+		next(error);
+	}
+};
 export default {
-	addPricingQualityController,
-	addPricingSizeController,
-	getSizeFromQualityController,
+	createController,
+	listController,
+	deletedController,
 };
