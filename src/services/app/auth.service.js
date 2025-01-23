@@ -12,6 +12,7 @@ import { v4 as uuid } from "uuid";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
+dotenv.config({ path: ".env.production" });
 const listUsers = async () => {
 	return await prisma.account.findMany({
 		select: {

@@ -1,4 +1,5 @@
 .env
+.env.production
 .env.local
 node_modules
 package-lock.json

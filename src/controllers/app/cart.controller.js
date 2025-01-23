@@ -3,6 +3,7 @@ import { ResponseError } from "../../errors/Response.error.js";
 import cartService from "../../services/app/cart.service.js";
 import dotenv from "dotenv";
 dotenv.config();
+dotenv.config({ path: ".env.production" });
 const generateCodePromotionController = async (req, res, next) => {
 	try {
 		const { code } = req.body;

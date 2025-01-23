@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { ResponseError } from "../errors/Response.error.js";
 dotenv.config();
+dotenv.config({ path: ".env.production" });
 
 export const verifyToken = (req, res, next) => {
 	const authHeader = req.headers["authorization"];

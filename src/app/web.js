@@ -9,6 +9,7 @@ import { appRoute } from "../routes/app.routes.js";
 import { authRoutes } from "../routes/auth.routes.js";
 import dotenv from "dotenv";
 dotenv.config();
+dotenv.config({ path: ".env.production" });
 export const web = express();
 
 web.use(helmet());

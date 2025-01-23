@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { ResponseError } from "../../errors/Response.error.js";
 import dotenv from "dotenv";
 dotenv.config();
+dotenv.config({ path: ".env.production" });
 
 export const refreshToken = async (req, res, next) => {
 	try {

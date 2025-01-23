@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { ResponseError } from "../errors/Response.error.js";
 
 dotenv.config();
+dotenv.config({ path: ".env.production" });
 
 const prisma = new PrismaClient();
 

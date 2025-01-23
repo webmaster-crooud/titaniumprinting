@@ -4,6 +4,7 @@ import authService from "../../services/app/auth.service.js";
 import dotenv from "dotenv";
 import EmailService from "../../app/nodemailer.js";
 dotenv.config();
+dotenv.config({ path: ".env.production" });
 
 const listUserController = async (req, res, next) => {
 	try {

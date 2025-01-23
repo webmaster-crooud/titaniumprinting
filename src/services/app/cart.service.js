@@ -9,6 +9,7 @@ import {
 import { validate } from "../../validations/validation.js";
 import dotenv from "dotenv";
 dotenv.config();
+dotenv.config({ path: ".env.production" });
 
 const checkPromotionValidity = (start, end) => {
 	const now = formatUnix(new Date()); // Waktu saat ini dalam timestamp
