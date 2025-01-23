@@ -31,4 +31,4 @@ jobs:
             git fetch --all
             git reset --hard origin/main
             npm install --omit=dev
-            pm2 restart titaniumprinting || pm2 start index.js --name titaniumprinting
+            pm2 restart titaniumprinting || pm2 start src/main.js --name titaniumprinting
