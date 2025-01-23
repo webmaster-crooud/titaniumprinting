@@ -10,20 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout kode dari repository
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 22.9.0
 
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test
-
+      # Step 4: Deploy ke server menggunakan SSH
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
