@@ -10,27 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout kode dari repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Setup Node.js environment
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 22.9.0
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Deploy ke server menggunakan SSH
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.SSH_HOST }} # IP atau domain server Anda
+          username: ${{ secrets.SSH_USERNAME }} # Username SSH (biasanya 'root' atau 'ubuntu')
+          port: 2222 # Port SSH yang digunakan (2222)
+          key: ${{ secrets.SSH_PRIVATE_KEY }} # Private key SSH
           script: |
             cd /var/www/backend
             git pull origin main
