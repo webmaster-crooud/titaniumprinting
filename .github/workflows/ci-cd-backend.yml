@@ -18,9 +18,6 @@ jobs:
         with:
           node-version: 22.9.0
 
-      - name: Install dependencies
-        run: npm install
-
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
@@ -31,6 +28,7 @@ jobs:
           script: |
             export PATH=$PATH:/home/crooud/.nvm/versions/node/v22.9.0/bin
             cd /var/www/backend
-            git pull origin main
+            git fetch --all
+            git reset --hard origin/main
             npm install --production
             pm2 restart titaniumprinting
