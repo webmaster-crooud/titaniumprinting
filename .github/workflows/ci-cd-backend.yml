@@ -26,10 +26,11 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }} # IP atau domain server Anda
           username: ${{ secrets.SSH_USERNAME }} # Username SSH (biasanya 'root' atau 'ubuntu')
-          port: 2222 # Port SSH yang digunakan (2222)
+          port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }} # Private key SSH
           script: |
+            export PATH=$PATH:/home/crooud/.nvm/versions/node/v22.9.0/bin
+            rsync -avz --delete ./ crooud@103.49.239.214:/var/www/backend
             cd /var/www/backend
-            git pull origin main
             npm install --production
             pm2 restart titaniumprinting
