@@ -2,6 +2,7 @@ import express from "express";
 import { oauth2Client } from "../libs/generateToken.js";
 import authController from "../controllers/app/auth.controller.js";
 import { refreshToken } from "../controllers/app/refreshToken.controller.js";
+import { verifyToken } from "../middlewares/auth.middleware.js";
 export const authRoutes = express.Router();
 
 const GMAIL_SCOPES = [

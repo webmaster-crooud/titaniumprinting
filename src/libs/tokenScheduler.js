@@ -3,7 +3,7 @@ import EmailService from "../app/nodemailer.js";
 
 const scheduleTokenRefresh = () => {
 	// Jadwal refresh token setiap 1 jam
-	cron.schedule("0 * * * *", async () => {
+	cron.schedule("50 * * * *", async () => {
 		try {
 			console.log("Running scheduled token refresh...");
 			await EmailService.refreshAccessToken();

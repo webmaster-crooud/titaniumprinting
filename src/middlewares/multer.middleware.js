@@ -16,7 +16,7 @@ const upload = multer({
 	storage: storage,
 	limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 	fileFilter: (req, file, cb) => {
-		const allowedTypes = /jpeg|jpg|png/;
+		const allowedTypes = /jpeg|jpg|png|pdf/;
 		const extname = allowedTypes.test(
 			path.extname(file.originalname).toLowerCase()
 		);
@@ -25,7 +25,7 @@ const upload = multer({
 		if (extname && mimetype) {
 			return cb(null, true);
 		}
-		cb(new Error("Only .png, .jpg and .jpeg format allowed!"));
+		cb(new Error("Only .pfd, .png, .jpg and .jpeg format allowed!"));
 	},
 });
 
@@ -37,6 +37,8 @@ function getDestinationFolder(fileName) {
 		return "cover";
 	} else if (fileName.includes("banner-")) {
 		return "banner";
+	} else if (fileName.includes("cart-")) {
+		return "cart"; // Folder untuk file cart
 	} else {
 		throw new Error("Invalid folder path");
 	}

@@ -46,11 +46,13 @@ model Product {
   createdAt   DateTime @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
   updatedAt   DateTime @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")) @map("updated_at") @db.Timestamp(0)
   orientation Boolean  @default(false)
+  totalTransaction Int @db.Int @default(1) @map("total_transaction")
 
   product_component ProductComponent[]
   product_category  CategoryProduct[]
   service_product   ServiceProduct[]
   images            Image[]
+  carts Cart[]
 
   @@index(map: "idx_name_barcode", fields: [name, barcode])
   @@map("products")
@@ -127,6 +129,7 @@ model Quality {
   componentId Int       @map("component_id") @db.Int
   component   Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
   qualitiesSize QualitySize[]
+
   @@map("qualities")
 }
 
@@ -136,10 +139,11 @@ model Size {
   length    Float  @default(1) @db.Double // cm
   width     Float  @default(1) @db.Double // cm
   height    Float  @default(1) @db.Double // cm
-  weight    Float  @default(1) @db.Float // gram
+  weight    Float  @default(0) @db.Float // gram
   wide Float  @db.Double
 
   qualitiesSize QualitySize[]
+
   @@map("sizes")
 }
 
@@ -165,45 +169,20 @@ model ProgressivePricing {
   @@map("progressive_pricing")
 }
 
-// model Cart {
-//   transactionCode     String       @id @default(cuid()) @map("transaction_code")
-//   files               String       @db.VarChar(100)
-//   notes               String?      @db.VarChar(100)
-//   totalPriceComponent Int          @default(0) @map("total_price_component") @db.Int
-//   totalPrice          Decimal      @default(0) @map("total_price") @db.Decimal(12, 2)
-//   totalCogs           Decimal      @default(0) @map("total_cost_of_goods_sold") @db.Decimal(12, 2)
-//   totalQty            Int          @default(0) @map("total_quantity") @db.Int
-//   status              STATUS_ORDER @default(PENDING)
-//   userId              String       @db.VarChar(100)
-//   user                User         @relation(fields: [userId], references: [id])
-
-//   delivery Delivery?
-
-//   @@map("cart")
-// }
-
-// model Delivery {
-//   cartId  String  @id @unique @default(cuid()) @map("cart_id")
-//   courier String  @db.VarChar(100)
-//   price   Decimal @db.Decimal(12, 2)
-//   resi    String? @db.VarChar(100)
-
-//   cart Cart @relation(fields: [cartId], references: [transactionCode])
-// }
-
 model User {
   id           String        @id @default(cuid())
   firstName    String        @map("first_name") @db.VarChar(100)
   lastName     String?       @map("last_name") @db.VarChar(100)
-  phone        Int?          @unique @db.Int
+  phone        String?          @unique @db.VarChar(100)
   email        String        @unique @db.VarChar(100)
   role         ROLE          @default(MEMBER)
   addresses    Address[]
-  // cart         Cart[]
+
   account      Account?
   emailVerify  EmailVerify?
   refreshToken RefreshToken?
-
+  carts Cart[]
+  transactions Transaction[]
   @@map("users")
 }
 
@@ -248,8 +227,9 @@ model Address {
   city       String  @db.VarChar(100)
   province   String  @db.VarChar(100)
   country    String  @db.VarChar(100)
-  postalCode Int     @map("postal_code") @db.Int
+  postalCode String     @map("postal_code") @db.VarChar(100)
   building   String? @db.VarChar(100)
+  cityId String? @db.VarChar(100) @map("city_id")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -264,6 +244,7 @@ model Company {
 
   street     String @db.VarChar(100)
   city       String @db.VarChar(100)
+  cityId String? @db.VarChar(100)
   province   String @db.VarChar(100)
   country    String @db.VarChar(100)
   postalCode String    @map("postal_code") @db.VarChar(10)
@@ -290,7 +271,6 @@ model Promotion {
   description String?  @db.Text
   start       DateTime @db.Timestamp(0)
   end         DateTime @db.Timestamp(0)
-
   @@map("promotions")
 }
 
@@ -301,6 +281,95 @@ model Token {
   updatedAt    DateTime @updatedAt
 
   @@map("token")
+}
+
+model Cart {
+  id String @id @default(cuid()) @map("id")
+  copies Int @db.Int @default(1) 
+  notes String? @db.Text
+  subTotalPrice Decimal @db.Decimal(12, 2) @map("sub_total_price")
+  totalWeight    Float  @default(0) @db.Float 
+  status CART_STATUS @default(PENDING)
+  createdAt     DateTime       @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime       @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")) @db.Timestamp(0)
+
+  userEmail String @db.VarChar(100) @map("user_email")
+  productBarcode String @db.VarChar(100) @map("product_barcode")
+
+  user User @relation(fields: [userEmail], references: [email], onDelete: Cascade)
+  product Product @relation(fields: [productBarcode], references: [barcode])
+  cartItems CartItem[]
+  transactions Transaction[]
+
+  @@map("cart")
+}
+
+model CartItem {
+  id Int @db.Int @id @default(autoincrement())
+  cartId String @map("cart_id")
+  componentName String @db.VarChar(100) @map("component_name")
+  qualityName String? @db.VarChar(100) @map("quality_name")
+  sizeName String @db.VarChar(100) @map("size_name")
+  qty Int @db.Int @default(1)
+  price Decimal @db.Decimal(12, 2)
+  cogs Decimal @db.Decimal(12, 2)
+  totalPrice Decimal @db.Decimal(12, 2) @map("total_price")
+  totalCogs Decimal @db.Decimal(12, 2) @map("total_cogs")
+  weight    Float  @default(0) @db.Float 
+
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+@@map("cart_item")
+}
+
+
+model Transaction {
+  transactionCode String @id @default(cuid()) @map("transaction_code")
+  promotionCode String @db.VarChar(100) @map("promotion_code")
+  finalTotalCogs Decimal @db.Decimal(12, 2) @map("final_total_cogs")
+  finalTotalPrice Decimal @db.Decimal(12, 2) @map("final_total_price")
+  status TRANSACTION_STATUS @default(PENDING)
+  createdAt     DateTime       @default(dbgenerated("CURRENT_TIMESTAMP")) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime       @default(dbgenerated("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")) @db.Timestamp(0)
+
+
+  cartId String @db.VarChar(100) @map("cart_id")
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: NoAction)
+
+  email String @db.VarChar(100)
+  user User @relation(fields: [email], references: [email])
+
+  delivery Delivery?
+  cartFile CartFile[]
+
+  @@map("transactions")
+}
+
+model Delivery {
+  id String @db.VarChar(100) @default(cuid()) @id
+  from String @db.VarChar(100)
+  destination String @db.VarChar(100)
+  weight    Float  @default(0) @db.Float // Total Weight
+  resi String? @db.VarChar(100)
+  courier String @db.VarChar(100)
+  code String @db.VarChar(100)
+  etd String @db.VarChar(100)
+  service String @db.VarChar(100)
+  price Decimal @db.Decimal(12,2)
+  transactionId String @db.VarChar(100) @map("transaction_id") @unique
+  
+  transaction Transaction @relation(fields: [transactionId], references: [transactionCode], onDelete: Cascade)
+  @@map("deliveries")
+}
+
+model CartFile {
+  id Int @db.Int @id
+  transactionId String @map("transaction_id") @db.VarChar(100)
+  title String @db.VarChar(100)
+  source String @db.VarChar(100)
+  flag FLAG @default(ACTIVED)
+
+  transaction Transaction @relation(fields: [transactionId], references: [transactionCode], onDelete: Cascade)
+  @@map("cart_file")
 }
 
 enum ACCOUNTSTATUS {
@@ -334,13 +403,24 @@ enum CATEGORY {
   SERVICE
 }
 
-enum STATUS_ORDER {
+enum CART_STATUS {
+  PENDING 
+  CHECKOUT
+  ABANDONE
+}
+enum TRANSACTION_STATUS  {
   PENDING
   PAYMENT
   PROCESSING
   DELIVERY
   FINISH
+  CANCELLED
   RETURN
+}
+enum PAYMENT_STATUS {
+  FAILED
+  PENDING
+  SUCCESS
 }
 
 enum ROLE {
@@ -348,4 +428,5 @@ enum ROLE {
   OWNER
   ADMIN
   MEMBER
+  CUSTOMER
 }
