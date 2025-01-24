@@ -16,8 +16,8 @@ web.use(helmet());
 web.use(
 	cors({
 		origin: [
-			`${process.env.APP_BASEURL}:3000`,
-			`${process.env.APP_BASEURL}:5173`,
+			`${process.env.APP_FRONTEND_PANEL}`,
+			`${process.env.APP_FRONTEND_PANEL}`,
 		],
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
 		allowedHeaders: [
