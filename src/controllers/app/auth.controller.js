@@ -71,11 +71,11 @@ const emailVerifyController = async (req, res, next) => {
 		const result = await authService.emailVerify(request);
 
 		res.redirect(
-			`${process.env.APP_FRONTEND}/login?status=success&message=Congrats! Successfully to ${result.status} Email ${result.email}`
+			`${process.env.APP_FRONTEND_HOME}/login?status=success&message=Congrats! Successfully to ${result.status} Email ${result.email}`
 		);
 	} catch (error) {
 		res.redirect(
-			`${process.env.APP_FRONTEND}/login?status=error&message=${error}`
+			`${process.env.APP_FRONTEND_HOME}/login?status=error&message=${error}`
 		);
 		// next(error);
 	}
