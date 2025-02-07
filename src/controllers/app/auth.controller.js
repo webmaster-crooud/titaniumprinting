@@ -35,15 +35,18 @@ const registerController = async (req, res, next) => {
 			expiredAt: result.emailVerify.expiredAt,
 		};
 
+		const html = templateEmailVerify(userData);
+		// const to = userData.email;
+		// await EmailService.sendEmail(to, subject, html);
 		const subject = "Aktivasi Pendaftaran Akun Member Titanium Printing";
-		const contentHtml = OTPSenderTemplate(userData.firstName, userData.token);
+		// const contentHtml = OTPSenderTemplate(userData.firstName, userData.token);
 
 		await sendEmail({
 			email: userData.email,
 			firstName: userData.firstName,
 			lastName: userData.lastName,
 			subject: subject,
-			content: contentHtml,
+			content: html,
 		});
 
 		res.status(201).json({
@@ -91,14 +94,18 @@ const resendEmailVerify = async (req, res, next) => {
 			expiredAt: result.expiredAt,
 		};
 
+		const html = templateEmailVerify(userData);
+		// const to = userData.email;
+		// await EmailService.sendEmail(to, subject, html);
 		const subject = "Aktivasi Pendaftaran Akun Member Titanium Printing";
-		const contentHtml = OTPSenderTemplate(userData.firstName, userData.token);
+		// const contentHtml = OTPSenderTemplate(userData.firstName, userData.token);
+
 		await sendEmail({
 			email: userData.email,
 			firstName: userData.firstName,
 			lastName: userData.lastName,
 			subject: subject,
-			content: contentHtml,
+			content: html,
 		});
 		res.status(201).json({
 			message: `Successfully to sending new email confirmation to ${result.email}`,
