@@ -66,9 +66,8 @@ export const templateEmailVerify = (userData) => {
 
 				<div style="width: 100%; text-align: center;">
 				<a
-					href="${process.env.APP_BASEURL}:${
-		process.env.APP_PORT
-	}/api/auth/email-verify/${userData.email}?token=${userData.token}"
+					href="${process.env.APP_BASEURL}
+	/api/auth/email-verify/${userData.email}?token=${userData.token}"
 					style="
 						width: 60%;
 						background-color: #3b82f6;
@@ -103,13 +102,13 @@ export const templateEmailVerify = (userData) => {
 				<p style="font-size: 15px">
 					Jika tombol tidak berfungsi silahkan melanjutkan dengan link berikut:
 					<a
-						href="${process.env.APP_BASEURL}:${
-		process.env.APP_PORT
-	}/api/auth/email-verify/${userData.email}?token=${userData.token}"
-					>
-						${process.env.APP_BASEURL}:${process.env.APP_PORT}/api/auth/email-verify/${
+						href="${process.env.APP_BASEURL}/api/auth/email-verify/${
 		userData.email
-	}?token=${userData.token}
+	}?token=${userData.token}"
+					>
+						${process.env.APP_BASEURL}/api/auth/email-verify/${userData.email}?token=${
+		userData.token
+	}
 					</a>
 				</p>
 			</div>
