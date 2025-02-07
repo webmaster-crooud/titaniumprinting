@@ -61,6 +61,11 @@ const transactionController = async (req, res, next) => {
 			},
 			item_details: itemsData,
 			customer_details: customerDetails,
+			callbacks: {
+				finish:
+					"https://www.titaniumprint.id/transaction/successfully/" +
+					result.createTransaction.transactionCode, // Pastikan URL benar
+			},
 		};
 
 		// Create transaction with Midtrans

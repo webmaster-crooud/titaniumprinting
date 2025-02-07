@@ -15,6 +15,7 @@ const checkPromotionValidity = (start, end) => {
 	const now = formatUnix(new Date()); // Waktu saat ini dalam timestamp
 	start = formatUnix(start);
 	end = formatUnix(end);
+
 	if (now < start || now > end) {
 		throw new ResponseError(
 			400,
