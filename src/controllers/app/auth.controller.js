@@ -124,16 +124,7 @@ const loginController = async (req, res, next) => {
 
 		const result = await authService.login(request);
 		// Tambahkan header ini
-		// Atur CORS headers
-		const allowedOrigins = [
-			process.env.APP_FRONTEND_HOME,
-			process.env.APP_FRONTEND_PANEL,
-		];
-		const origin = req.headers.origin;
-		if (allowedOrigins.includes(origin)) {
-			res.set("Access-Control-Allow-Origin", origin);
-		}
-
+		res.set("Access-Control-Allow-Origin", "https://www.titaniumprint.id");
 		res.set("Access-Control-Allow-Credentials", "true");
 
 		res.cookie("refreshToken", result.refreshToken, {
