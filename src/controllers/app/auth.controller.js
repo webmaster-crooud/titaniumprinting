@@ -124,13 +124,22 @@ const loginController = async (req, res, next) => {
 
 		const result = await authService.login(request);
 		// Tambahkan header ini
-		res.set("Access-Control-Allow-Origin", "http://localhost:5173");
+		// Atur CORS headers
+		const allowedOrigins = [
+			process.env.APP_FRONTEND_HOME,
+			process.env.APP_FRONTEND_PANEL,
+		];
+		const origin = req.headers.origin;
+		if (allowedOrigins.includes(origin)) {
+			res.set("Access-Control-Allow-Origin", origin);
+		}
+
 		res.set("Access-Control-Allow-Credentials", "true");
 
 		res.cookie("refreshToken", result.refreshToken, {
 			httpOnly: true,
 			maxAge: 24 * 60 * 60 * 1000,
-			secure: false, // Ubah ke false untuk development
+			secure: true, // Ubah ke false untuk development
 			sameSite: "lax", // Coba 'none' jika masih bermasalah
 			// domain: 'localhost' // Opsional untuk local
 		});
