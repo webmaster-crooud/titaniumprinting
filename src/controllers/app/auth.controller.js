@@ -118,22 +118,27 @@ const resendEmailVerify = async (req, res, next) => {
 const loginController = async (req, res, next) => {
 	try {
 		const request = req.body;
-
-		if (!request.email && !request.username)
+		if (!request.email && !request.username) {
 			throw new ResponseError(400, "Bad Request");
+		}
 
 		const result = await authService.login(request);
-		// Tambahkan header ini
+
+		// Set CORS headers
 		res.set("Access-Control-Allow-Origin", "https://www.titaniumprint.id");
 		res.set("Access-Control-Allow-Credentials", "true");
 
+		// Set cookie with proper domain configuration
 		res.cookie("refreshToken", result.refreshToken, {
 			httpOnly: true,
 			maxAge: 24 * 60 * 60 * 1000,
-			secure: true, // Ubah ke false untuk development
-			sameSite: "lax", // Coba 'none' jika masih bermasalah
-			// domain: 'localhost' // Opsional untuk local
+			secure: true,
+			sameSite: "strict", // Changed from 'lax' for better security
+			domain: ".titaniumprint.id", // Allow sharing between subdomains
+			path: "/", // Explicitly set path
 		});
+
+		// Return success response
 		res.status(200).json({
 			message: "Successfully login",
 			token: result.accessToken,
