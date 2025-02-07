@@ -123,7 +123,10 @@ const loginController = async (req, res, next) => {
 		}
 
 		const result = await authService.login(request);
-
+		res.clearCookie("refreshToken", {
+			domain: ".titaniumprint.id",
+			path: "/",
+		});
 		// Set CORS headers
 		res.set("Access-Control-Allow-Origin", "https://www.titaniumprint.id");
 		res.set("Access-Control-Allow-Credentials", "true");
