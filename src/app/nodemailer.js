@@ -86,15 +86,24 @@ class EmailService {
 		try {
 			const accessToken = await this.getAccessToken();
 
+			// const transporter = nodemailer.createTransport({
+			// 	service: "gmail",
+			// 	auth: {
+			// 		type: "OAUTH2",
+			// 		user: process.env.CLIENT_EMAIL,
+			// 		clientId: process.env.CLIENT_ID,
+			// 		clientSecret: process.env.CLIENT_SECRET,
+			// 		refreshToken: (await prisma.token.findFirst()).refreshToken,
+			// 		accessToken,
+			// 	},
+			// });
 			const transporter = nodemailer.createTransport({
-				service: "gmail",
+				host: "smtp.kirimemail.com",
+				port: 465, // Bisa juga 587 jika pakai STARTTLS
+				secure: true, // Gunakan true untuk port 465 (SSL/TLS)
 				auth: {
-					type: "OAUTH2",
-					user: process.env.CLIENT_EMAIL,
-					clientId: process.env.CLIENT_ID,
-					clientSecret: process.env.CLIENT_SECRET,
-					refreshToken: (await prisma.token.findFirst()).refreshToken,
-					accessToken,
+					user: process.env.MAIL_KIRIM_EMAIL, // Contoh: "helo@titaniumprint.id"
+					pass: process.env.PASS_KIRIM_EMAIL, // Masukkan password email
 				},
 			});
 

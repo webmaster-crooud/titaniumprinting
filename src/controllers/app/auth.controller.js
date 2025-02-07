@@ -3,6 +3,8 @@ import { ResponseError } from "../../errors/Response.error.js";
 import authService from "../../services/app/auth.service.js";
 import dotenv from "dotenv";
 import EmailService from "../../app/nodemailer.js";
+import { sendEmail } from "../../libs/mailersend.js";
+import { OTPSenderTemplate } from "../../../templates/OTPsender.template.js";
 dotenv.config();
 dotenv.config({ path: ".env.production" });
 
@@ -33,10 +35,16 @@ const registerController = async (req, res, next) => {
 			expiredAt: result.emailVerify.expiredAt,
 		};
 
-		const html = templateEmailVerify(userData);
-		const to = userData.email;
 		const subject = "Aktivasi Pendaftaran Akun Member Titanium Printing";
-		await EmailService.sendEmail(to, subject, html);
+		const contentHtml = OTPSenderTemplate(userData.firstName, userData.token);
+
+		await sendEmail({
+			email: userData.email,
+			firstName: userData.firstName,
+			lastName: userData.lastName,
+			subject: subject,
+			content: contentHtml,
+		});
 
 		res.status(201).json({
 			message: "OK",
@@ -83,10 +91,15 @@ const resendEmailVerify = async (req, res, next) => {
 			expiredAt: result.expiredAt,
 		};
 
-		const html = templateEmailVerify(userData);
-		const to = userData.email;
 		const subject = "Aktivasi Pendaftaran Akun Member Titanium Printing";
-		await EmailService.sendEmail(to, subject, html);
+		const contentHtml = OTPSenderTemplate(userData.firstName, userData.token);
+		await sendEmail({
+			email: userData.email,
+			firstName: userData.firstName,
+			lastName: userData.lastName,
+			subject: subject,
+			content: contentHtml,
+		});
 		res.status(201).json({
 			message: `Successfully to sending new email confirmation to ${result.email}`,
 		});

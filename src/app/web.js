@@ -12,11 +12,13 @@ dotenv.config();
 dotenv.config({ path: ".env.production" });
 export const web = express();
 
+console.log(process.env.APP_FRONTEND_HOME);
+console.log(process.env.APP_FRONTEND_PANEL);
 web.use(helmet());
 web.use(
 	cors({
 		origin: [
-			`${process.env.APP_FRONTEND_PANEL}`,
+			`${process.env.APP_FRONTEND_HOME}`,
 			`${process.env.APP_FRONTEND_PANEL}`,
 		],
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
@@ -29,6 +31,15 @@ web.use(
 		credentials: true,
 	})
 );
+// web.use(
+// 	cors({
+// 		origin: [process.env.APP_FRONTEND_HOME, process.env.APP_FRONTEND_PANEL],
+// 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+// 		allowedHeaders: ["Content-Type", "Authorization", "Set-Cookie"],
+// 		exposedHeaders: ["Set-Cookie"],
+// 		credentials: true,
+// 	})
+// );
 web.use(cookieParser());
 web.use(express.json());
 

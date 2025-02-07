@@ -74,9 +74,9 @@ const detail = async (slug) => {
 		const progressivePricing = await prisma.progressivePricing.findMany({
 			where: {
 				OR: [
-					{ entityType: "COMPONENT", entityId: { in: componentIds } },
-					{ entityType: "QUALITY", entityId: { in: qualityIds } },
-					{ entityType: "SIZE", entityId: { in: sizeIds } },
+					{ entityType: "component", entityId: { in: componentIds } },
+					{ entityType: "quality", entityId: { in: qualityIds } },
+					{ entityType: "qualitySize", entityId: { in: sizeIds } },
 				],
 			},
 		});
@@ -125,17 +125,18 @@ const detail = async (slug) => {
 						...pc.component,
 						progressivePricing: progressivePricing.filter(
 							(pp) =>
-								pp.entityType === "COMPONENT" && pp.entityId === pc.componentId
+								pp.entityType === "component" && pp.entityId === pc.componentId
 						),
 						qualities: pc.component.qualities.map((q) => ({
 							...q,
 							progressivePricing: progressivePricing.filter(
-								(pp) => pp.entityType === "QUALITY" && pp.entityId === q.id
+								(pp) => pp.entityType === "quality" && pp.entityId === q.id
 							),
 							qualitiesSize: q.qualitiesSize.map((qs) => ({
 								...qs,
 								progressivePricing: progressivePricing.filter(
-									(pp) => pp.entityType === "SIZE" && pp.entityId === qs.sizeId
+									(pp) =>
+										pp.entityType === "qualitySize" && pp.entityId === qs.sizeId
 								),
 							})),
 						})),
