@@ -154,7 +154,13 @@ const loginController = async (req, res, next) => {
 const logoutController = async (req, res, next) => {
 	try {
 		await authService.logout(req);
-		res.clearCookie("refreshToken");
+		res.clearCookie("refreshToken", {
+			httpOnly: true,
+			secure: true,
+			sameSite: "strict",
+			domain: ".titaniumprint.id", // Harus sama dengan domain saat login
+			path: "/", // Harus sama dengan path saat login
+		});
 		res.status(200).json({
 			message: "Successfully logout",
 		});
