@@ -1,13 +1,5 @@
 import slug from "slug";
-import {
-	coverProductValidation,
-	getBarcodeValidation,
-	getCategoryProductValidation,
-	getServiceProductValidation,
-	imagesProductValidation,
-	productUpdateValidation,
-	productValidation,
-} from "../validations/product.validation.js";
+import { coverProductValidation, getBarcodeValidation, getCategoryProductValidation, getServiceProductValidation, imagesProductValidation, productUpdateValidation, productValidation } from "../validations/product.validation.js";
 import { validate } from "../validations/validation.js";
 import { prisma } from "../app/database.js";
 import { ResponseError } from "../errors/Response.error.js";
@@ -352,8 +344,7 @@ const favourite = async (barcode) => {
 
 	// console.log(product);
 
-	if (product.flag === "DISABLED")
-		throw new ResponseError(400, "Products is disabled");
+	if (product.flag === "DISABLED") throw new ResponseError(400, "Products is disabled");
 	if (!product) throw new ResponseError(404, "Product is not found!");
 
 	if (product.flag === "ACTIVED") {
@@ -401,8 +392,7 @@ const deleted = async (barcode) => {
 			},
 		});
 
-		if (!product)
-			throw new ResponseError(404, `Product with this barcode is Not Found!`);
+		if (!product) throw new ResponseError(404, `Product with this barcode is Not Found!`);
 
 		const images = await tx.image.deleteMany({
 			where: {
@@ -506,13 +496,9 @@ const updateCategoryProduct = async (params, request) => {
 		},
 	});
 
-	if (!productCategory)
-		throw new ResponseError(404, "Category is not found in this products");
+	if (!productCategory) throw new ResponseError(404, "Category is not found in this products");
 
-	if (
-		productCategory.barcode === barcode &&
-		productparseInt(Category.categoryId) === request.categoryId
-	) {
+	if (productCategory.barcode === barcode && productparseInt(categoryId) === request.categoryId) {
 		throw new ResponseError(400, "Nothing changes");
 	}
 	productCategory = await prisma.categoryProduct.findFirst({
@@ -572,8 +558,7 @@ const createCategoryProduct = async (request) => {
 		},
 	});
 
-	if (product)
-		throw new ResponseError(400, `${product.categories.name} is already Exist`);
+	if (product) throw new ResponseError(400, `${product.categories.name} is already Exist`);
 
 	const result = await prisma.categoryProduct.create({
 		data: request,
@@ -610,8 +595,7 @@ const deleteCategoryProduct = async (params) => {
 		},
 	});
 
-	if (!productCategory)
-		throw new ResponseError(404, "Category is not found in this products");
+	if (!productCategory) throw new ResponseError(404, "Category is not found in this products");
 
 	const result = await prisma.categoryProduct.delete({
 		where: {
@@ -655,13 +639,9 @@ const updateServiceProduct = async (params, request) => {
 		},
 	});
 
-	if (!productService)
-		throw new ResponseError(404, "Service is not found in this products");
+	if (!productService) throw new ResponseError(404, "Service is not found in this products");
 
-	if (
-		productService.barcodeProduct === barcode &&
-		productService.barcodeService === request.barcodeService
-	) {
+	if (productService.barcodeProduct === barcode && productService.barcodeService === request.barcodeService) {
 		throw new ResponseError(400, "Nothing changes");
 	}
 	productService = await prisma.serviceProduct.findFirst({
@@ -722,8 +702,7 @@ const createServiceProduct = async (request) => {
 		},
 	});
 
-	if (product)
-		throw new ResponseError(400, `${product.services.name} is already Exist`);
+	if (product) throw new ResponseError(400, `${product.services.name} is already Exist`);
 
 	const result = await prisma.serviceProduct.create({
 		data: request,
@@ -761,8 +740,7 @@ const deleteServiceProduct = async (params) => {
 		},
 	});
 
-	if (!productCategory)
-		throw new ResponseError(404, "Category is not found in this products");
+	if (!productCategory) throw new ResponseError(404, "Category is not found in this products");
 
 	const result = await prisma.serviceProduct.delete({
 		where: {
@@ -889,6 +867,23 @@ const createImagesProduct = async (barcode, request) => {
 	});
 };
 
+const addComponentProduct = async (componentId, productId) => {
+	const checkProduct = await prisma.productComponent.count({
+		where: {
+			barcode: productId,
+			componentId: componentId,
+		},
+	});
+
+	if (checkProduct !== 0) throw new ResponseError(404, "Component has already exist");
+	await prisma.productComponent.create({
+		data: {
+			componentId: componentId,
+			barcode: productId,
+		},
+	});
+};
+
 export default {
 	create,
 	findByBarcode,
@@ -912,4 +907,5 @@ export default {
 	updateImagesProduct,
 	deleteImagesProduct,
 	createImagesProduct,
+	addComponentProduct,
 };

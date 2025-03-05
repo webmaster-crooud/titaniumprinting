@@ -17,10 +17,7 @@ console.log(process.env.APP_FRONTEND_PANEL);
 web.use(helmet());
 web.use(
 	cors({
-		origin: [
-			`${process.env.APP_FRONTEND_HOME}`,
-			`${process.env.APP_FRONTEND_PANEL}`,
-		],
+		origin: [`${process.env.APP_FRONTEND_HOME}`, `${process.env.APP_FRONTEND_PANEL}`],
 		methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
 		allowedHeaders: [
 			"Content-Type",

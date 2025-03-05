@@ -144,17 +144,13 @@ const deletedController = async (req, res, next) => {
 		try {
 			// Delete cover image file
 			if (product.cover) {
-				await fs.unlink(
-					path.join(__dirname, "../../public/cover/", product.cover)
-				);
+				await fs.unlink(path.join(__dirname, "../../public/cover/", product.cover));
 			}
 
 			// Delete multiple image files
 			await Promise.all(
 				product.images.map(async (image) => {
-					await fs.unlink(
-						path.join(__dirname, "../../public/images/", image.source)
-					);
+					await fs.unlink(path.join(__dirname, "../../public/images/", image.source));
 				})
 			);
 		} catch (error) {
@@ -283,17 +279,15 @@ const updateCoverProductController = async (req, res, next) => {
 			throw new ResponseError(404, "Product not found");
 		}
 
-		try {
-			// Delete cover image file
-			if (product.cover) {
-				await fs.unlink(
-					path.join(__dirname, "../../public/cover/", product.cover)
-				);
-			}
-		} catch (error) {
-			logger.error("Error deleting files:", error);
-			throw new ResponseError(500, "Failed to delete files");
-		}
+		// try {
+		// 	// Delete cover image file
+		// 	if (product.cover) {
+		// 		await fs.unlink(path.join(__dirname, "../../public/cover/", product.cover));
+		// 	}
+		// } catch (error) {
+		// 	logger.error("Error deleting files:", error);
+		// 	throw new ResponseError(500, "Failed to delete files");
+		// }
 
 		const request = JSON.parse(req.body.data);
 		await productService.updateCoverProduct(barcode, request);
@@ -326,9 +320,7 @@ const updateImagesProductController = async (req, res, next) => {
 		try {
 			// Delete cover image file
 			if (images.source) {
-				await fs.unlink(
-					path.join(__dirname, "../../public/images/", images.source)
-				);
+				await fs.unlink(path.join(__dirname, "../../public/images/", images.source));
 			}
 		} catch (error) {
 			logger.error("Error deleting files:", error);
@@ -367,9 +359,7 @@ const deleteImagesProductController = async (req, res, next) => {
 		try {
 			// Delete cover image file
 			if (images.source) {
-				await fs.unlink(
-					path.join(__dirname, "../../public/images/", images.source)
-				);
+				await fs.unlink(path.join(__dirname, "../../public/images/", images.source));
 			}
 		} catch (error) {
 			logger.error("Error deleting files:", error);
@@ -399,6 +389,18 @@ const createImagesProductController = async (req, res, next) => {
 		next(error);
 	}
 };
+
+const addComponentProductController = async (req, res, next) => {
+	try {
+		const { barcode, componentId } = req.params;
+		await productService.addComponentProduct(componentId, barcode);
+		res.status(201).json({
+			message: "Component has Successfully adding in Product",
+		});
+	} catch (error) {
+		next(error);
+	}
+};
 export default {
 	createController,
 	detailController,
@@ -421,4 +423,5 @@ export default {
 	updateImagesProductController,
 	deleteImagesProductController,
 	createImagesProductController,
+	addComponentProductController,
 };
