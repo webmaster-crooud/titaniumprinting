@@ -897,8 +897,10 @@ const deleteComponentProduct = async (productId, componentId) => {
 	if (checkProduct === 0) throw new ResponseError(400, "Component is not found!");
 	await prisma.productComponent.delete({
 		where: {
-			componentId: parseInt(componentId),
-			barcode: productId,
+			barcode_componentId: {
+				componentId: parseInt(componentId),
+				barcode: productId,
+			},
 		},
 	});
 };
