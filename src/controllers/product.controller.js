@@ -392,8 +392,8 @@ const createImagesProductController = async (req, res, next) => {
 
 const addComponentProductController = async (req, res, next) => {
 	try {
-		const { barcode, componentId } = req.params;
-		await productService.addComponentProduct(componentId, barcode);
+		const { barcode } = req.params;
+		await productService.addComponentProduct(barcode, req.body);
 		res.status(201).json({
 			message: "Component has Successfully adding in Product",
 		});

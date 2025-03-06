@@ -867,7 +867,8 @@ const createImagesProduct = async (barcode, request) => {
 	});
 };
 
-const addComponentProduct = async (componentId, productId) => {
+const addComponentProduct = async (productId, request) => {
+	const { componentId, minQty } = request;
 	const checkProduct = await prisma.productComponent.count({
 		where: {
 			barcode: productId,
@@ -880,6 +881,7 @@ const addComponentProduct = async (componentId, productId) => {
 		data: {
 			componentId: componentId,
 			barcode: productId,
+			minQty: minQty,
 		},
 	});
 };
