@@ -872,16 +872,16 @@ const addComponentProduct = async (productId, request) => {
 	const checkProduct = await prisma.productComponent.count({
 		where: {
 			barcode: productId,
-			componentId: componentId,
+			componentId: parseInt(componentId),
 		},
 	});
 
 	if (checkProduct !== 0) throw new ResponseError(404, "Component has already exist");
 	await prisma.productComponent.create({
 		data: {
-			componentId: componentId,
+			componentId: parseInt(componentId),
 			barcode: productId,
-			minQty: minQty,
+			minQty: parseInt(minQty),
 		},
 	});
 };
