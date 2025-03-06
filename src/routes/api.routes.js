@@ -47,6 +47,7 @@ apiRouter.delete("/products/delete/category/:barcode/:categoryId/", verifyToken,
 apiRouter.delete("/products/delete/services/:barcode/:barcodeService/", verifyToken, productController.deleteServicesProductController);
 apiRouter.get("/products/components", verifyToken, productController.listComponentsProductsController);
 apiRouter.post("/products/components/:barcode", verifyToken, productController.addComponentProductController);
+apiRouter.delete("/products/components/:barcode/:componentId", verifyToken, productController.deleteComponentProductController);
 apiRouter.get("/products/categories", verifyToken, productController.listCategoriesProductsController);
 apiRouter.get("/products/services", verifyToken, productController.listServiceProductsController);
 apiRouter.get("/products/:barcode", verifyToken, productController.detailController);

@@ -876,12 +876,29 @@ const addComponentProduct = async (productId, request) => {
 		},
 	});
 
-	if (checkProduct !== 0) throw new ResponseError(404, "Component has already exist");
+	if (checkProduct !== 0) throw new ResponseError(400, "Component has already exist");
 	await prisma.productComponent.create({
 		data: {
 			componentId: parseInt(componentId),
 			barcode: productId,
 			minQty: parseInt(minQty),
+		},
+	});
+};
+
+const deleteComponentProduct = async (productId, componentId) => {
+	const checkProduct = await prisma.productComponent.count({
+		where: {
+			barcode: productId,
+			componentId: parseInt(componentId),
+		},
+	});
+
+	if (checkProduct === 0) throw new ResponseError(400, "Component is not found!");
+	await prisma.productComponent.delete({
+		where: {
+			componentId: parseInt(componentId),
+			barcode: productId,
 		},
 	});
 };
@@ -910,4 +927,5 @@ export default {
 	deleteImagesProduct,
 	createImagesProduct,
 	addComponentProduct,
+	deleteComponentProduct,
 };

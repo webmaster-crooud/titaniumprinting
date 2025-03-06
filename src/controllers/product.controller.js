@@ -401,6 +401,17 @@ const addComponentProductController = async (req, res, next) => {
 		next(error);
 	}
 };
+const deleteComponentProductController = async (req, res, next) => {
+	try {
+		const { barcode, componentId } = req.params;
+		await productService.deleteComponentProduct(barcode, componentId);
+		res.status(201).json({
+			message: "Component has Successfully deleted from Product",
+		});
+	} catch (error) {
+		next(error);
+	}
+};
 export default {
 	createController,
 	detailController,
@@ -424,4 +435,5 @@ export default {
 	deleteImagesProductController,
 	createImagesProductController,
 	addComponentProductController,
+	deleteComponentProductController,
 };
